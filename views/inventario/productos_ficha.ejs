@@ -1,0 +1,75 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <!-- Título y descripción -->
+  <div class="text-center mb-4">
+    <h1 class="h4"><%= producto.nombre %></h1>
+    <p class="text-muted"><%= producto.descripcion || '' %></p>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Imagen -->
+    <div class="col-md-4 text-center">
+      <% if (producto.imagen) { %>
+        <img src="<%= producto.imagen %>" class="img-fluid rounded border"
+             style="max-height: 260px; object-fit: contain;">
+      <% } else { %>
+        <i class="fa fa-image fa-5x text-muted"></i>
+      <% } %>
+    </div>
+
+    <!-- Detalles -->
+    <div class="col-md-8">
+      <table class="table table-bordered">
+        <tr>
+          <th style="width: 30%;">Marca</th>
+          <td><%= producto.marca || '—' %></td>
+        </tr>
+        <tr>
+          <th>Material</th>
+          <td><%= producto.material || '—' %></td>
+        </tr>
+        <tr>
+          <th>Color</th>
+          <td><%= producto.color || '—' %></td>
+        </tr>
+        <tr>
+          <th>Forma</th>
+          <td><%= producto.forma || '—' %></td>
+        </tr>
+        <tr>
+          <th>Unidad</th>
+          <td>
+            <%= producto.capacidad
+                  ? producto.capacidad + ' ' + (producto.unidad || '')
+                  : '—' %>
+          </td>
+        </tr>
+        <!-- Precio sugerido (antes precio_venta) -->
+        <tr>
+          <th>Precio sugerido (Q)</th>
+          <td>Q <%= (+producto.precio_venta).toFixed(2) %></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Auditoría y botones -->
+  <div class="mt-4">
+    <p class="text-muted small">
+      Creado por: <%= producto.creado_por_nombre || '—' %> |
+      Actualizado por: <%= producto.actualizado_por_nombre || '—' %>
+    </p>
+    <a href="/inventario/productos" class="btn btn-secondary">
+      <i class="fa fa-arrow-left"></i> Volver
+    </a>
+    <a href="/inventario/productos/<%= producto.id %>/editar"
+       class="btn btn-primary ms-2">
+      <i class="fa fa-pen"></i> Editar
+    </a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

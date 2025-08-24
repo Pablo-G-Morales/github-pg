@@ -1,0 +1,61 @@
+<%- include('../partials/header') %>
+
+<!-- DataTables CSS y JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Colores</h2>
+
+  <a href="/inventario/colores/nuevo" class="btn btn-success mb-3">
+    <i class="fa fa-plus"></i> Nuevo color
+  </a>
+
+  <div class="table-responsive">
+    <table id="tabla-colores" class="table table-sm table-striped table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Código</th>
+          <th>Vista</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% colores.forEach(c => { 
+             const colorStyle = `width: 24px; height: 24px; background-color: ${c.hex}; border: 1px solid #ccc; border-radius: 4px; display: inline-block;`;
+        %>
+          <tr>
+            <td><%= c.id %></td>
+            <td><%= c.nombre %></td>
+            <td><%= c.hex %></td>
+            <td><span style="<%= colorStyle %>"></span></td>
+            <td>
+              <a href="/inventario/colores/<%= c.id %>/editar" class="btn btn-sm btn-primary">
+                <i class="fa fa-pen"></i> Editar
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Inicializa DataTables
+  $(document).ready(function () {
+    $('#tabla-colores').DataTable({
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+      },
+      pageLength: 10,
+      order: [[1, 'asc']] // ordena por nombre al inicio
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

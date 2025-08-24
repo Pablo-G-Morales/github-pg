@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+
+  <!-- Título y descripción -->
+  <div class="text-center mb-4">
+    <h1 class="h4"><%= proveedor.nombre %></h1>
+    <p class="text-muted"><%= proveedor.descripcion || '' %></p>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- (Opcional) Imagen o ícono genérico  -->
+    <div class="col-md-3 text-center mb-3">
+      <% if (proveedor.imagen) { %>
+        <img src="<%= proveedor.imagen %>" class="img-fluid rounded border"
+             style="max-height: 220px; object-fit: contain;">
+      <% } else { %>
+        <i class="fa fa-user-tie fa-5x text-muted"></i>
+      <% } %>
+    </div>
+
+    <!-- Detalles -->
+    <div class="col-md-9">
+      <table class="table table-bordered">
+        <tr>
+          <th style="width: 30%;">Teléfono</th>
+          <td><%= proveedor.telefono || '—' %></td>
+        </tr>
+        <tr>
+          <th>Correo</th>
+          <td>
+            <% if (proveedor.correo) { %>
+              <a href="mailto:<%= proveedor.correo %>"><%= proveedor.correo %></a>
+            <% } else { %>—<% } %>
+          </td>
+        </tr>
+        <tr>
+          <th>Dirección</th>
+          <td><%= proveedor.direccion || '—' %></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Auditoría y botones -->
+  <div class="mt-4">
+    <p class="text-muted small">
+      Creado por: <%= proveedor.creado_por_nombre || '—' %> |
+      Actualizado por: <%= proveedor.actualizado_por_nombre || '—' %>
+    </p>
+
+    <a href="/inventario/proveedores" class="btn btn-secondary">
+      <i class="fa fa-arrow-left"></i> Volver
+    </a>
+    <a href="/inventario/proveedores/<%= proveedor.id %>/editar"
+       class="btn btn-primary ms-2">
+      <i class="fa fa-pen"></i> Editar
+    </a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

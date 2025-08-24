@@ -1,0 +1,24 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Ficha de unidad</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><%= unidad.nombre %> (<%= unidad.simbolo %>)</h5>
+
+      <hr>
+      <p><strong>Creado por:</strong> <%= unidad.creado_por_nombre || 'N/D' %></p>
+      <p><strong>Creado en:</strong> <%= unidad.creado_en.toLocaleString() %></p>
+      <p><strong>Actualizado por:</strong> <%= unidad.actualizado_por_nombre || '—' %></p>
+      <p><strong>Actualizado en:</strong> <%= unidad.actualizado_en.toLocaleString() %></p>
+    </div>
+  </div>
+
+  <a href="/inventario/unidades" class="btn btn-secondary">Volver</a>
+  <a href="/inventario/unidades/<%= unidad.id %>/editar" class="btn btn-primary ms-2">
+    Editar
+  </a>
+</div>
+
+<%- include('../partials/footer') %>

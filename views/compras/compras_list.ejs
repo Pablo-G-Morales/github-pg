@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+<section class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Compras de insumos</h2>
+    <a href="/compras/ordenes/nuevo" class="btn btn-success">
+      <i class="fa fa-plus"></i> Nueva compra
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table id="tablaCompras"
+           class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Proveedor</th>
+          <th>Total (Q)</th>
+          <th>Registrada</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% compras.forEach(c=>{ %>
+          <tr>
+            <td><%= c.id %></td>
+            <td><%= c.proveedor %></td>
+            <td><%= (c.total_compra||0).toFixed(2) %></td>
+            <td><%= c.creado_en.toLocaleString() %></td>
+            <td>
+              <a href="/compras/ordenes/<%= c.id %>" class="btn btn-sm btn-primary">
+                <i class="fa fa-eye"></i>
+              </a>
+              <a href="/compras/ordenes/<%= c.id %>/pdf" class="btn btn-sm btn-secondary" target="_blank">
+                <i class="fa fa-file-pdf"></i>
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  $(function () {
+    $('#tablaCompras').DataTable({
+      order: [[0,'desc']],
+      pageLength: 10,
+      language: { url:'//cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json' }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

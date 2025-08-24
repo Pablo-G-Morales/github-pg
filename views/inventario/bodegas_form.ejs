@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= bodega.id ? 'Editar' : 'Nueva' %> bodega</h2>
+
+  <form action="<%= bodega.id ? '/inventario/bodegas/'+bodega.id+'/editar'
+                               : '/inventario/bodegas/nueva' %>"
+        method="POST" class="row g-3">
+
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input name="nombre" required class="form-control" value="<%= bodega.nombre %>">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Ubicación</label>
+      <input name="ubicacion" class="form-control" value="<%= bodega.ubicacion %>">
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Descripción</label>
+      <textarea name="descripcion" rows="3" class="form-control"><%= bodega.descripcion %></textarea>
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+      <a href="/inventario/bodegas" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

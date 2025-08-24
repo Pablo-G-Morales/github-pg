@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4" style="max-width:600px">
+  <h2 class="h4 mb-3">Nuevo inventario</h2>
+
+  <form class="row g-3"
+        action="/inventario/productos/<%= producto_id %>/inventario/nuevo"
+        method="POST">
+
+    <!-- Bodega -->
+    <div class="col-md-6">
+      <label class="form-label">Bodega</label>
+      <select name="warehouse_id" class="form-select" required>
+        <option value="">— Seleccionar —</option>
+        <% bodegas.forEach(b => { %>
+          <option value="<%= b.id %>"><%= b.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Proveedor -->
+    <div class="col-md-6">
+      <label class="form-label">Proveedor</label>
+      <select name="supplier_id" class="form-select" required>
+        <option value="">— Seleccionar —</option>
+        <% proveedores.forEach(p => { %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Cantidad -->
+    <div class="col-md-4">
+      <label class="form-label">Cantidad</label>
+      <input type="number" name="cantidad" min="0" class="form-control" required>
+    </div>
+
+    <!-- Precio compra -->
+    <div class="col-md-4">
+      <label class="form-label">Precio compra (Q)</label>
+      <input type="number" step="0.01" name="precio_compra" class="form-control" required>
+    </div>
+
+    <!-- Precio venta -->
+    <div class="col-md-4">
+      <label class="form-label">Precio venta (Q)</label>
+      <input type="number" step="0.01" name="precio_venta" class="form-control">
+    </div>
+
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <a href="/inventario/productos/<%= producto_id %>/inventario"
+         class="btn btn-outline-secondary">Cancelar</a>
+      <button class="btn btn-success">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

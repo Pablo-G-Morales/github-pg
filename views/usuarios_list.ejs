@@ -1,0 +1,59 @@
+<%- include('partials/header', { title:'Gestión de Usuarios', user }); %>
+
+<div class="mb-3 d-flex gap-3 align-items-end">
+  <form class="row row-cols-lg-auto g-2" method="GET">
+    <div class="col-12">
+      <input class="form-control" name="q" placeholder="Buscar…" value="<%= filters.q %>">
+    </div>
+
+    <div class="col-12">
+      <select class="form-select" name="rol">
+        <option value="all">Todos los roles</option>
+        <% roles.forEach(r=>{ %>
+          <option value="<%= r.id %>" <%= r.id==filters.rol ? 'selected':'' %>><%= r.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-12">
+      <select class="form-select" name="estado">
+        <option value="all">Todos los estados</option>
+        <% estados.forEach(e=>{ %>
+          <option value="<%= e.id %>" <%= e.id==filters.estado ? 'selected':'' %>><%= e.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-primary">Filtrar</button>
+    </div>
+  </form>
+
+  <a href="/usuarios/nuevo" class="btn btn-success ms-auto">➕ Nuevo usuario</a>
+</div>
+
+<table class="table table-hover align-middle">
+  <thead class="table-light">
+    <tr><th>ID</th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% if (!rows.length) { %>
+      <tr><td colspan="6" class="text-center">Sin resultados</td></tr>
+    <% } %>
+    <% rows.forEach(u=>{ %>
+      <tr>
+        <td><%= u.id %></td>
+        <td><%= u.nombre %> <%= u.apellido %></td>
+        <td><%= u.usuario %></td>
+        <td><%= u.rol %></td>
+        <td><%= u.estado %></td>
+        <td>
+          <a href="/usuarios/ficha/<%= u.id %>"  class="btn btn-sm btn-outline-info  me-1">Ficha</a>
+          <a href="/usuarios/editar/<%= u.id %>" class="btn btn-sm btn-outline-primary">Editar</a>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<%- include('partials/footer'); %>

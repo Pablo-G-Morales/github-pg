@@ -1,0 +1,58 @@
+<%- include('../partials/header') %>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= precio.id ? 'Editar' : 'Nuevo' %> precio proveedor</h2>
+
+  <form action="<%= precio.id ? '/inventario/precios/'+precio.id+'/editar'
+                               : '/inventario/precios/nuevo' %>"
+        method="POST" class="row g-3">
+
+    <div class="col-md-6">
+      <label class="form-label">Producto</label>
+      <select name="product_id" required class="form-select select2">
+        <option value="">— Seleccionar —</option>
+        <% productos.forEach(pr=>{ %>
+          <option value="<%= pr.id %>" <%= pr.id==precio.product_id?'selected':'' %>>
+            <%= pr.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Proveedor</label>
+      <select name="supplier_id" required class="form-select select2">
+        <option value="">— Seleccionar —</option>
+        <% proveedores.forEach(s=>{ %>
+          <option value="<%= s.id %>" <%= s.id==precio.supplier_id?'selected':'' %>>
+            <%= s.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Fecha vigencia</label>
+      <input type="date" name="fecha_vigencia" required class="form-control"
+        value="<%= precio.fecha_vigencia ? precio.fecha_vigencia.toISOString().substring(0,10) : '' %>">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Precio compra (Q)</label>
+      <input type="number" step="0.01" name="precio_compra" required class="form-control"
+             value="<%= precio.precio_compra %>">
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+      <a href="/inventario/precios" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>$('.select2').select2({ width:'100%' });</script>
+
+<%- include('../partials/footer') %>

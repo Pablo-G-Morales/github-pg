@@ -1,0 +1,29 @@
+<%- include('partials/header', { title:'Dashboard', user }); %>
+
+<h1 class="mb-4">📊 Dashboard</h1>
+
+<p class="lead">Bienvenido al sistema de gestión de SubliRex.</p>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Usuarios registrados</h5>
+        <p class="card-text">Consulta, filtra y administra los usuarios del sistema.</p>
+        <a href="/usuarios" class="btn btn-outline-primary">Ir al módulo de usuarios</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Sistema de pedidos</h5>
+        <p class="card-text">Visualiza y administra los pedidos personalizados.</p>
+        <a href="/pedidos" class="btn btn-outline-success">Ir a pedidos</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer'); %>

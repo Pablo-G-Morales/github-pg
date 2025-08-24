@@ -1,0 +1,42 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= proveedor.id ? 'Editar' : 'Nuevo' %> proveedor</h2>
+
+  <form action="<%= proveedor.id ? '/inventario/proveedores/'+proveedor.id+'/editar'
+                                   : '/inventario/proveedores/nuevo' %>"
+        method="POST" class="row g-3">
+
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input name="nombre" required class="form-control" value="<%= proveedor.nombre %>">
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Teléfono</label>
+      <input name="telefono" class="form-control" value="<%= proveedor.telefono %>">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Correo</label>
+      <input name="correo" type="email" class="form-control" value="<%= proveedor.correo %>">
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Dirección</label>
+      <input name="direccion" class="form-control" value="<%= proveedor.direccion %>">
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Descripción</label>
+      <textarea name="descripcion" rows="3" class="form-control"><%= proveedor.descripcion %></textarea>
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+      <a href="/inventario/proveedores" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

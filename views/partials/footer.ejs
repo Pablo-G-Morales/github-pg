@@ -1,0 +1,17 @@
+    </div> <!-- /.p-4 -->
+  </div>   <!-- /.main-content -->
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const toggle = document.getElementById('themeToggle');
+    const root   = document.documentElement;
+    const stored = localStorage.getItem('srex-theme');
+    if (stored){ root.setAttribute('data-bs-theme', stored); toggle.checked = stored==='dark'; }
+    toggle?.addEventListener('change', ()=>{
+      const theme = toggle.checked?'dark':'light';
+      root.setAttribute('data-bs-theme', theme);
+      localStorage.setItem('srex-theme', theme);
+    });
+  </script>
+</body>
+</html>

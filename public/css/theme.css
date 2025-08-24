@@ -1,0 +1,17 @@
+/* Colores corporativos accesibles en cualquier vista */
+:root {
+  --srex-primary: #2b2e62;
+  --srex-accent : #00bb00;
+}
+
+/* Tema oscuro mejorado */
+[data-bs-theme="dark"] body {
+  background-color: #121212;
+}
+
+  .user-foto {
+    width: 20px;
+    height: 20px;
+    object-fit: cover;
+    object-position: center;
+  }

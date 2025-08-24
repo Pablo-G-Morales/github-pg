@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Formas</h2>
+
+  <a href="/inventario/formas/nuevo" class="btn btn-success mb-3">
+    <i class="fa fa-plus"></i> Nueva forma
+  </a>
+
+  <div class="table-responsive">
+    <table id="tblFormas" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr><th>#</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <% formas.forEach(f => { %>
+          <tr>
+            <td><%= f.id %></td>
+            <td><%= f.nombre %></td>
+            <td><%= f.descripcion %></td>
+            <td class="text-nowrap">
+              <a href="/inventario/formas/<%= f.id %>" class="btn btn-sm btn-info me-1">
+                <i class="fa fa-eye"></i> Ver
+              </a>
+              <a href="/inventario/formas/<%= f.id %>/editar" class="btn btn-sm btn-primary">
+                <i class="fa fa-pen"></i> Editar
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function () {
+    $('#tblFormas').DataTable({
+      language:{
+        search:"Buscar:",
+        lengthMenu:"Mostrar _MENU_ registros",
+        info:"_START_–_END_ de _TOTAL_",
+        paginate:{previous:"Anterior", next:"Siguiente"}
+      }
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

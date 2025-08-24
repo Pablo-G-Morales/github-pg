@@ -1,0 +1,28 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= color.id ? 'Editar' : 'Nuevo' %> color</h2>
+
+  <form action="<%= color.id ? '/inventario/colores/' + color.id + '/editar'
+                               : '/inventario/colores/nuevo' %>" method="POST" class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input type="text" name="nombre" class="form-control" required value="<%= color.nombre %>">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Código HEX</label>
+      <input type="color" name="hex" class="form-control form-control-color w-100"
+             value="<%= color.hex %>" title="Elige color">
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-success">
+        <i class="fa fa-save"></i> Guardar
+      </button>
+      <a href="/inventario/colores" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

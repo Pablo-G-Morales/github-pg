@@ -1,0 +1,122 @@
+<%- include('../partials/header') %>
+
+<!-- Select2 (opcional) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= prod.id ? 'Editar' : 'Nuevo' %> producto</h2>
+
+  <form action="<%= prod.id ? '/inventario/productos/' + prod.id + '/editar'
+                             : '/inventario/productos/nuevo' %>"
+        method="POST" enctype="multipart/form-data" class="row g-3">
+
+    <!-- Nombre y Marca -->
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input name="nombre" required class="form-control" value="<%= prod.nombre %>">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Marca</label>
+      <select name="brand_id" class="form-select select2">
+        <option value="">— Sin marca —</option>
+        <% marcas.forEach(m => { %>
+          <option value="<%= m.id %>" <%= m.id == prod.brand_id ? 'selected' : '' %>>
+            <%= m.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Material y Color -->
+    <div class="col-md-6">
+      <label class="form-label">Material</label>
+      <select name="material_id" class="form-select select2">
+        <option value="">— Seleccionar —</option>
+        <% materiales.forEach(mat => { %>
+          <option value="<%= mat.id %>" <%= mat.id == prod.material_id ? 'selected' : '' %>>
+            <%= mat.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Color</label>
+      <select name="color_id" class="form-select select2">
+        <option value="">— Seleccionar —</option>
+        <% colores.forEach(c => { %>
+          <option value="<%= c.id %>" <%= c.id == prod.color_id ? 'selected' : '' %>>
+            <%= c.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Forma / Unidad + Capacidad -->
+    <div class="col-md-6">
+      <label class="form-label">Forma</label>
+      <select name="shape_id" class="form-select select2">
+        <option value="">— Seleccionar —</option>
+        <% formas.forEach(f => { %>
+          <option value="<%= f.id %>" <%= f.id == prod.shape_id ? 'selected' : '' %>>
+            <%= f.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Unidad</label>
+      <select name="unit_id" class="form-select select2">
+        <option value="">— Seleccionar —</option>
+        <% unidades.forEach(u => { %>
+          <option value="<%= u.id %>" <%= u.id == prod.unit_id ? 'selected' : '' %>>
+            <%= u.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+<br><br>
+    <div class="col-md-2">
+      <label class="form-label">Capacidad</label>
+      <input type="number" step="0.01" name="capacidad" class="form-control"
+             value="<%= prod.capacidad %>">
+    </div>
+
+    <!-- Precio venta sugerido -->
+    <div class="col-md-6">
+      <label class="form-label">Precio venta sugerido (Q)</label>
+      <input type="number" step="0.01" name="precio_venta" required
+             class="form-control" value="<%= prod.precio_venta %>">
+    </div>
+
+    <!-- Descripción -->
+    <div class="col-12">
+      <label class="form-label">Descripción</label>
+      <textarea name="descripcion" rows="3" class="form-control"><%= prod.descripcion %></textarea>
+    </div>
+
+    <!-- Imagen -->
+    <div class="col-md-6">
+      <label class="form-label">Imagen (&lt; 1&nbsp;MB)</label>
+      <input type="file" name="img" accept="image/*" class="form-control">
+      <% if (prod.imagen) { %>
+        <img src="<%= prod.imagen %>" class="mt-2"
+             style="width: 80px; height: 80px; object-fit: cover;">
+      <% } %>
+    </div>
+
+    <!-- Botones -->
+    <div class="col-12">
+      <button class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+      <a href="/inventario/productos" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>$('.select2').select2({ width: '100%' });</script>
+
+<%- include('../partials/footer') %>

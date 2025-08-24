@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<div class="container-fluid py-4">
+
+  <h1 class="h4 mb-4">Histórico de precios por proveedor</h1>
+
+  <!-- BOTÓN NUEVO (dirige a formulario modal o página aparte, según implementes) -->
+  <a href="/inventario/precios/nuevo" class="btn btn-success mb-3">
+    <i class="fa fa-plus"></i> Nuevo precio
+  </a>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered table-sm align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Producto</th>
+          <th>Proveedor</th>
+          <th class="text-center">Fecha vigencia</th>
+          <th class="text-end">Compra (Q)</th>
+          <th class="text-end">Venta (Q)</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% precios.forEach(p => { %>
+          <tr>
+            <td><%= p.id %></td>
+            <td><%= p.producto %></td>
+            <td><%= p.proveedor %></td>
+            <td class="text-center"><%= p.fecha_vigencia %></td>
+            <td class="text-end"><%= (+p.precio_compra).toFixed(2) %></td>
+            <td class="text-end">
+              <%= p.precio_venta !== null ? (+p.precio_venta).toFixed(2) : '—' %>
+            </td>
+            <td class="text-center">
+              <!-- EDITAR -->
+              <form class="d-inline" action="/inventario/precios/<%= p.id %>/editar" method="GET">
+                <button class="btn btn-sm btn-primary">
+                  <i class="fa fa-pen"></i>
+                </button>
+              </form>
+              <!-- ELIMINAR -->
+              <form class="d-inline" action="/inventario/precios/<%= p.id %>/eliminar" method="POST"
+                    onsubmit="return confirm('¿Eliminar este registro?')">
+                <button class="btn btn-sm btn-danger">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <a href="/inventario" class="btn btn-secondary mt-3">
+    <i class="fa fa-arrow-left"></i> Volver al Inventario
+  </a>
+</div>
+
+<%- include('../partials/footer') %>

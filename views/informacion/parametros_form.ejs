@@ -1,0 +1,38 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4" style="max-width:520px;">
+  <h2 class="h4 mb-3"><%= registro.id ? 'Editar' : 'Nuevo' %> parámetro</h2>
+
+  <form action="<%= registro.id ? '/informacion/'+registro.id+'/editar' : '/informacion/nuevo' %>"
+        method="post">
+
+    <div class="mb-3">
+      <label class="form-label">Plancha</label>
+      <select name="plancha_id" class="form-select" required>
+        <option value="">Seleccione...</option>
+        <% planchas.forEach(p=>{ %>
+          <option value="<%= p.id %>" <%= p.id==registro.plancha_id?'selected':'' %>>
+            <%= p.nombre %>
+          </option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Temperatura (°C)</label>
+      <input type="number" name="temperatura" class="form-control" min="100" max="300"
+             required value="<%= registro.temperatura || '' %>">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Tiempo (segundos)</label>
+      <input type="number" name="tiempo" class="form-control" min="1" max="600"
+             required value="<%= registro.tiempo || '' %>">
+    </div>
+
+    <button class="btn btn-primary"><%= registro.id ? 'Actualizar' : 'Crear' %></button>
+    <a href="/informacion" class="btn btn-secondary">Cancelar</a>
+  </form>
+</section>
+
+<%- include('../partials/footer') %>

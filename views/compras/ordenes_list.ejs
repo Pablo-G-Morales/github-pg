@@ -1,0 +1,43 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Órdenes de compra</h2>
+    <a href="/compras/ordenes/nuevo" class="btn btn-success">
+      <i class="fa fa-plus"></i> Nueva orden
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Fecha / hora</th>
+          <th>Proveedor</th>
+          <th class="text-end">Total Q</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% ordenes.forEach(o => { %>
+          <tr>
+            <td><%= o.id %></td>
+            <td><%= o.fecha %></td>
+            <td><%= o.proveedor %></td>
+            <td class="text-end">
+              <%= Number(o.total || 0).toFixed(2) %>
+            </td>
+            <td class="text-end">
+              <a href="/compras/ordenes/<%= o.id %>" class="btn btn-sm btn-primary">
+                <i class="fa fa-eye"></i> Ver
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

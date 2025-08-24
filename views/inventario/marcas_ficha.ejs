@@ -1,0 +1,22 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Ficha de marca</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><%= marca.nombre %></h5>
+      <p class="mb-3"><strong>Descripción:</strong> <%= marca.descripcion || '—' %></p>
+      <hr>
+      <p><strong>Creado por:</strong> <%= marca.creado_por_nombre || 'N/D' %></p>
+      <p><strong>Creado en:</strong> <%= marca.creado_en.toLocaleString() %></p>
+      <p><strong>Actualizado por:</strong> <%= marca.actualizado_por_nombre || '—' %></p>
+      <p><strong>Actualizado en:</strong> <%= marca.actualizado_en.toLocaleString() %></p>
+    </div>
+  </div>
+
+  <a href="/inventario/marcas" class="btn btn-secondary">Volver</a>
+  <a href="/inventario/marcas/<%= marca.id %>/editar" class="btn btn-primary ms-2">Editar</a>
+</div>
+
+<%- include('../partials/footer') %>

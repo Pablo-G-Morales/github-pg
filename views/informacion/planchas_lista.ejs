@@ -1,0 +1,42 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4">
+  <h2 class="h4 mb-3">Planchas</h2>
+
+  <a href="/informacion/planchas/nuevo" class="btn btn-success mb-3">
+    <i class="fa fa-plus"></i> Nueva plancha
+  </a>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th><th>Nombre</th><th>Imagen</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% planchas.forEach(p=>{ %>
+          <tr>
+            <td><%= p.id %></td>
+            <td><%= p.nombre %></td>
+            <td>
+              <% if (p.imagen) { %>
+                <img src="<%= p.imagen %>" alt="plancha" style="height:48px;">
+              <% } else { %>-<% } %>
+            </td>
+            <td>
+              <a href="/informacion/planchas/<%= p.id %>/editar" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
+              <form action="/informacion/planchas/<%= p.id %>/eliminar" method="post" style="display:inline;">
+                <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?');">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

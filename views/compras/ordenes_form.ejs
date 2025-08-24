@@ -1,0 +1,142 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4" style="max-width:720px;">
+  <h2 class="h4 mb-3">Nueva orden de compra</h2>
+
+  <% if (typeof flash !== 'undefined' && flash){ %>
+    <div class="alert alert-warning"><%= flash %></div>
+  <% } %>
+
+  <form id="formOrden" action="/compras/ordenes/nuevo" method="post">
+    <!-- PROVEEDOR -->
+    <div class="mb-3">
+      <label class="form-label">Proveedor</label>
+      <select name="proveedor_id" class="form-select" required>
+        <option value="">Seleccione…</option>
+        <% proveedores.forEach(p => { %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- TABLA ITEMS -->
+    <div class="table-responsive mb-3">
+      <table id="tablaItems" class="table table-sm table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="width:40%">Insumo</th>
+            <th style="width:15%">Cantidad</th>
+            <th style="width:20%">Precio Q</th>
+            <th style="width:15%">Subtotal</th>
+            <th style="width:10%"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <button type="button" id="btnAdd" class="btn btn-outline-primary mb-3">
+      <i class="fa fa-plus"></i> Agregar línea
+    </button>
+
+    <input type="hidden" name="filas" id="filas">
+    <div class="text-end">
+      <button class="btn btn-success px-4">Guardar</button>
+      <a href="/compras/ordenes" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  const INSUMOS = <%- JSON.stringify(insumos) %>;
+  const tbody   = document.querySelector('#tablaItems tbody');
+  const filasIn  = document.querySelector('#filas');
+
+  document.getElementById('btnAdd').onclick = () => addRow();
+
+  function addRow(){
+    const row = document.createElement('tr');
+
+    /* combo insumo */
+    const sel = document.createElement('select');
+    sel.className = 'form-select form-select-sm';
+    sel.innerHTML = `<option value="">--</option>` +
+      INSUMOS.map(i => `<option value="${i.id}" data-precio="${i.precio_estandar||0}">
+                         ${i.nombre}</option>`).join('');
+    sel.onchange = calcSubtotal;
+
+    /* cantidad */
+    const qty = document.createElement('input');
+    qty.type  = 'number';
+    qty.min   = 1;
+    qty.value = 1;
+    qty.className = 'form-control form-control-sm';
+    qty.oninput = calcSubtotal;
+
+    /* precio */
+    const price = document.createElement('input');
+    price.type  = 'number';
+    price.min   = 0;
+    price.step  = '0.01';
+    price.className = 'form-control form-control-sm';
+    price.oninput = calcSubtotal;
+
+    /* subtotal */
+    const sub = document.createElement('span');
+    sub.textContent = '0.00';
+
+    /* eliminar */
+    const del = document.createElement('button');
+    del.type  = 'button';
+    del.className = 'btn btn-sm btn-danger';
+    del.innerHTML = '<i class="fa fa-trash"></i>';
+    del.onclick = () => { row.remove(); serialize(); };
+
+    row.innerHTML = `
+      <td></td><td></td><td></td>
+      <td class="text-end"></td><td class="text-center"></td>`;
+    row.children[0].appendChild(sel);
+    row.children[1].appendChild(qty);
+    row.children[2].appendChild(price);
+    row.children[3].appendChild(sub);
+    row.children[4].appendChild(del);
+
+    tbody.appendChild(row);
+  }
+
+  function calcSubtotal(){
+    const row = this.closest('tr');
+    const sel = row.querySelector('select');
+    const qty = row.querySelector('input[type=number]');
+    const price = row.querySelectorAll('input[type=number]')[1];
+
+    /* si selecciona insumo, colocar precio sugerido */
+    if (this === sel && sel.value){
+      price.value = sel.selectedOptions[0].dataset.precio || 0;
+    }
+
+    const subtotal = (Number(qty.value)||0) * (Number(price.value)||0);
+    row.querySelector('span').textContent = subtotal.toFixed(2);
+
+    serialize();
+  }
+
+  function serialize(){
+    const data = [];
+    tbody.querySelectorAll('tr').forEach(tr => {
+      const insumo_id = tr.querySelector('select').value;
+      const cantidad  = tr.querySelector('input').value;
+      const precio    = tr.querySelectorAll('input')[1].value;
+      if (insumo_id && cantidad > 0){
+        data.push({
+          insumo_id: Number(insumo_id),
+          cantidad : Number(cantidad),
+          precio_unitario: Number(precio)
+        });
+      }
+    });
+    filasIn.value = JSON.stringify(data);
+  }
+</script>
+
+<%- include('../partials/footer') %>

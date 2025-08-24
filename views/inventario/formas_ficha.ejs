@@ -1,0 +1,24 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Ficha de forma</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><%= forma.nombre %></h5>
+      <p class="card-text"><%= forma.descripcion || '—' %></p>
+      <hr>
+      <p><strong>Creado por:</strong> <%= forma.creado_por_nombre || 'N/D' %></p>
+      <p><strong>Creado en:</strong> <%= forma.creado_en.toLocaleString() %></p>
+      <p><strong>Actualizado por:</strong> <%= forma.actualizado_por_nombre || '—' %></p>
+      <p><strong>Actualizado en:</strong> <%= forma.actualizado_en.toLocaleString() %></p>
+    </div>
+  </div>
+
+  <a href="/inventario/formas" class="btn btn-secondary">Volver</a>
+  <a href="/inventario/formas/<%= forma.id %>/editar" class="btn btn-primary ms-2">
+    Editar
+  </a>
+</div>
+
+<%- include('../partials/footer') %>

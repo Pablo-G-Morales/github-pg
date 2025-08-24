@@ -1,0 +1,46 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Proveedores</h2>
+
+  <a href="/inventario/proveedores/nuevo" class="btn btn-success mb-3">
+    <i class="fa fa-plus"></i> Nuevo proveedor
+  </a>
+
+  <div class="table-responsive">
+    <table id="tblProveedores" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% proveedores.forEach(p => { %>
+          <tr>
+            <td><%= p.id %></td>
+            <td><%= p.nombre %></td>
+            <td><%= p.telefono %></td>
+            <td><%= p.correo %></td>
+            <td class="text-nowrap">
+              <a href="/inventario/proveedores/<%= p.id %>"          class="btn btn-sm btn-info me-1"><i class="fa fa-eye"></i>Ver</a>
+              <a href="/inventario/proveedores/<%= p.id %>/editar"   class="btn btn-sm btn-primary"><i class="fa fa-pen"></i>Editar</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    $('#tblProveedores').DataTable({
+      language:{search:"Buscar:",lengthMenu:"Mostrar _MENU_ registros",
+                info:"_START_–_END_ de _TOTAL_",paginate:{previous:"Anterior",next:"Siguiente"}}
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

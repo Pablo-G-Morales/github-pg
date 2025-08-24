@@ -1,0 +1,33 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4" style="max-width:600px;">
+  <h2 class="h4 mb-3">Ficha insumo</h2>
+
+  <div class="card">
+    <div class="card-body">
+
+      <% if (insumo.imagen) { %>
+        <div class="text-center mb-3">
+          <img src="<%= insumo.imagen %>" style="max-height:160px;">
+        </div>
+      <% } %>
+
+      <p><strong>Nombre:</strong> <%= insumo.nombre %></p>
+      <p><strong>Descripción:</strong> <%= insumo.descripcion || '-' %></p>
+      <p><strong>Precio estándar:</strong>
+         <%= insumo.precio_estandar ? 'Q ' + insumo.precio_estandar : '-' %></p>
+
+      <p class="small text-muted">
+        Creado por: <%= insumo.creado_por_nombre || '-' %> |
+        Actualizado por: <%= insumo.actualizado_por_nombre || '-' %>
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a href="/compras/insumos/<%= insumo.id %>/editar" class="btn btn-primary">Editar</a>
+    <a href="/compras/insumos" class="btn btn-secondary">Volver</a>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

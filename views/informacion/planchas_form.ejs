@@ -1,0 +1,28 @@
+<%- include('../partials/header') %>
+<section class="container py-4" style="max-width:520px;">
+  <h2 class="h4 mb-3"><%= plancha.id ? 'Editar' : 'Nueva' %> plancha</h2>
+
+  <form enctype="multipart/form-data"
+        action="<%= plancha.id ? '/informacion/planchas/'+plancha.id+'/editar' : '/informacion/planchas/nuevo' %>"
+        method="post">
+
+    <div class="mb-3">
+      <label class="form-label">Nombre</label>
+      <input type="text" name="nombre" class="form-control" required value="<%= plancha.nombre || '' %>">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Imagen</label>
+      <% if (plancha.imagen) { %>
+        <div class="mb-2">
+          <img src="<%= plancha.imagen %>" style="height:80px;">
+        </div>
+      <% } %>
+      <input type="file" name="imagen" accept="image/*" class="form-control">
+    </div>
+
+    <button class="btn btn-primary"><%= plancha.id ? 'Actualizar' : 'Crear' %></button>
+    <a href="/informacion/planchas" class="btn btn-secondary">Cancelar</a>
+  </form>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,25 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Ficha del material</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><%= material.nombre %></h5>
+      <p class="card-text"><%= material.descripcion || '—' %></p>
+
+      <hr>
+      <p class="mb-1"><strong>Creado por:</strong> <%= material.creado_por_nombre || 'N/D' %></p>
+      <p class="mb-1"><strong>Creado en:</strong> <%= material.creado_en.toLocaleString() %></p>
+      <p class="mb-1"><strong>Actualizado por:</strong> <%= material.actualizado_por_nombre || '—' %></p>
+      <p class="mb-0"><strong>Actualizado en:</strong> <%= material.actualizado_en.toLocaleString() %></p>
+    </div>
+  </div>
+
+  <a href="/inventario/materiales" class="btn btn-secondary">Volver</a>
+  <a href="/inventario/materiales/<%= material.id %>/editar" class="btn btn-primary ms-2">
+    Editar
+  </a>
+</div>
+
+<%- include('../partials/footer') %>

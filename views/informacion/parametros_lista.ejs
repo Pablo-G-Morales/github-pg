@@ -1,0 +1,82 @@
+<%- include('../partials/header') %>
+
+<!-- ------------- ESTILOS DATATABLES ------------- -->
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Parámetros de sublimación</h2>
+    <div>
+      <a href="/informacion/planchas/nuevo" class="btn btn-outline-secondary me-2">
+        <i class="fa fa-plus"></i> Nueva plancha
+      </a>
+      <a href="/informacion/nuevo" class="btn btn-success">
+        <i class="fa fa-plus"></i> Nuevo registro
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table id="tablaParametros"
+           class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Plancha</th>
+          <th>Img.</th>
+          <th>Temp (°C)</th>
+          <th>Tiempo (s)</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% datos.forEach(d=>{ %>
+          <tr>
+            <td><%= d.id %></td>
+            <td><%= d.plancha %></td>
+            <td>
+              <% if (d.imagen) { %>
+                <img src="<%= d.imagen %>" style="height:40px;">
+              <% } else { %>-<% } %>
+            </td>
+            <td><%= d.temperatura %></td>
+            <td><%= d.tiempo %></td>
+            <td>
+              <a href="/informacion/<%= d.id %>/editar"
+                 class="btn btn-sm btn-primary">
+                <i class="fa fa-edit"></i>
+              </a>
+              <form action="/informacion/<%= d.id %>/eliminar"
+                    method="post" style="display:inline;">
+                <button class="btn btn-sm btn-danger"
+                        onclick="return confirm('¿Eliminar?');">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ------------- SCRIPTS DATATABLES ------------- -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  $(function () {
+    $('#tablaParametros').DataTable({
+      order: [],                     // sin orden inicial
+      pageLength: 10,
+      lengthMenu: [5, 10, 25, 50],
+      language: {                    // interfaz en español
+        url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json'
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

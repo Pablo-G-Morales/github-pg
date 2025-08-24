@@ -1,0 +1,49 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Bodegas</h2>
+
+  <a href="/inventario/bodegas/nueva" class="btn btn-success mb-3">
+    <i class="fa fa-plus"></i> Nueva bodega
+  </a>
+
+  <div class="table-responsive">
+    <table id="tblBodegas" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr><th>#</th><th>Nombre</th><th>Ubicación</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <% bodegas.forEach(b=>{ %>
+          <tr>
+            <td><%= b.id %></td>
+            <td><%= b.nombre %></td>
+            <td><%= b.ubicacion %></td>
+            <td class="text-nowrap">
+              <a href="/inventario/bodegas/<%= b.id %>" class="btn btn-sm btn-info me-1">
+                <i class="fa fa-eye"></i>Ver
+              </a>
+              <a href="/inventario/bodegas/<%= b.id %>/editar" class="btn btn-sm btn-primary">
+                <i class="fa fa-pen"></i>Editar
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    $('#tblBodegas').DataTable({
+      language:{search:"Buscar:",lengthMenu:"Mostrar _MENU_ registros",
+                info:"_START_–_END_ de _TOTAL_",
+                paginate:{previous:"Anterior", next:"Siguiente"}}
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

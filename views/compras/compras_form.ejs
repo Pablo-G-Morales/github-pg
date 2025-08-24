@@ -1,0 +1,102 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4" style="max-width:780px;">
+
+  <h2 class="h4 mb-3">Nueva compra de insumos</h2>
+
+  <form action="/compras/ordenes/nuevo" method="post">
+
+    <!-- PROVEEDOR -->
+    <div class="mb-3">
+      <label class="form-label">Proveedor</label>
+      <select name="provider_id" class="form-select" required>
+        <option value="">Seleccione...</option>
+        <% proveedores.forEach(p=>{ %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- DETALLE -->
+    <div class="table-responsive mb-3">
+      <table class="table table-bordered align-middle" id="tablaDetalle">
+        <thead class="table-light">
+          <tr>
+            <th style="width:45%;">Insumo</th>
+            <th>Cant.</th>
+            <th>Precio U.</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Fila inicial -->
+          <tr>
+            <td>
+              <select name="insumo_id[]" class="form-select" required>
+                <option value="">- seleccione -</option>
+                <% insumos.forEach(i=>{ %>
+                  <option value="<%= i.id %>"><%= i.nombre %></option>
+                <% }) %>
+              </select>
+            </td>
+            <td><input type="number" name="cantidad[]" class="form-control" min="0.01" step="0.01" required></td>
+            <td><input type="number" name="precio_unitario[]" class="form-control" min="0.01" step="0.01" required></td>
+            <td class="text-center">
+              <button type="button" class="btn btn-danger btn-sm btnDel"><i class="fa fa-trash"></i></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <button type="button" id="btnAddRow" class="btn btn-outline-primary btn-sm">
+        <i class="fa fa-plus"></i> Agregar línea
+      </button>
+    </div>
+
+    <button class="btn btn-success"><i class="fa fa-save"></i> Guardar compra</button>
+    <a href="/compras/ordenes" class="btn btn-secondary">Cancelar</a>
+  </form>
+</section>
+
+<!-- -------------  JS sin jQuery ------------- -->
+<script>
+(function () {
+  /* --- plantilla de fila (renderizada por EJS) --- */
+  const rowTemplate = `
+    <tr>
+      <td>
+        <select name="insumo_id[]" class="form-select" required>
+          <option value="">- seleccione -</option>
+          <% insumos.forEach(i=>{ %>
+            <option value="<%= i.id %>"><%= i.nombre %></option>
+          <% }) %>
+        </select>
+      </td>
+      <td><input type="number" name="cantidad[]" class="form-control" min="0.01" step="0.01" required></td>
+      <td><input type="number" name="precio_unitario[]" class="form-control" min="0.01" step="0.01" required></td>
+      <td class="text-center">
+        <button type="button" class="btn btn-danger btn-sm btnDel"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>
+  `;
+
+  const tbody = document.querySelector('#tablaDetalle tbody');
+  const btnAddRow = document.getElementById('btnAddRow');
+
+  // Agregar fila
+  btnAddRow.addEventListener('click', () => {
+    tbody.insertAdjacentHTML('beforeend', rowTemplate);
+  });
+
+  // Eliminar fila (delegado)
+  tbody.addEventListener('click', (e) => {
+    if (e.target.closest('.btnDel')) {
+      if (tbody.rows.length > 1) {
+        e.target.closest('tr').remove();
+      }
+    }
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>

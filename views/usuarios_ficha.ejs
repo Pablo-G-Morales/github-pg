@@ -1,0 +1,45 @@
+<%- include('partials/header', { title:'Ficha de usuario', user }); %>
+
+<style>
+  .user-foto {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    object-position: center;
+  }
+</style>
+
+<h2 class="mb-4">
+  <i class="bi bi-person-fill text-primary me-2"></i>
+  Ficha de <%= data.nombre %> <%= data.apellido %>
+</h2>
+
+<div class="row">
+  <div class="col-md-4 text-center">
+    <% if (data.foto_perfil) { %>
+      <img src="data:image/png;base64,<%= Buffer.from(data.foto_perfil).toString('base64') %>"
+           class="rounded-circle shadow mb-3 user-foto" alt="Foto de perfil">
+    <% } else { %>
+      <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center user-foto mx-auto mb-3">
+        Sin foto
+      </div>
+    <% } %>
+  </div>
+
+  <div class="col-md-8">
+    <table class="table table-striped">
+      <tr><th>Nombre</th><td><%= data.nombre %> <%= data.apellido %></td></tr>
+      <tr><th>DPI</th><td><%= data.dpi || '—' %></td></tr>
+      <tr><th>Correo</th><td><%= data.correo || '—' %></td></tr>
+      <tr><th>Teléfono</th><td><%= data.telefono || '—' %></td></tr>
+      <tr><th>Usuario</th><td><%= data.usuario %></td></tr>
+      <tr><th>Rol</th><td><%= data.rol %></td></tr>
+      <tr><th>Estado</th><td><%= data.estado %></td></tr>
+      <tr><th>Creado en</th><td><%= data.creado_en.toLocaleString() %></td></tr>
+    </table>
+  </div>
+</div>
+
+<a href="/usuarios" class="btn btn-secondary mt-3">← Volver</a>
+
+<%- include('partials/footer'); %>

@@ -1,0 +1,26 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Ficha precio proveedor</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title"><%= precio.producto %> — <%= precio.proveedor %></h5>
+
+      <p><strong>Fecha vigencia:</strong> <%= precio.fecha_vigencia.toISOString().substring(0,10) %></p>
+      <p><strong>Precio compra:</strong> Q <%= (+precio.precio_compra).toFixed(2) %></p>
+
+      <hr>
+      <p><strong>Creado por:</strong> <%= precio.creado_por_nombre || 'N/D' %></p>
+      <p><strong>Creado en:</strong> <%= precio.creado_en.toLocaleString() %></p>
+      <p><strong>Actualizado por:</strong> <%= precio.actualizado_por_nombre || '—' %></p>
+      <p><strong>Actualizado en:</strong> <%= precio.actualizado_en.toLocaleString() %></p>
+    </div>
+  </div>
+
+  <a href="/inventario/precios" class="btn btn-secondary">Volver</a>
+  <a href="/inventario/precios/<%= precio.id %>/editar"
+     class="btn btn-primary ms-2">Editar</a>
+</div>
+
+<%- include('../partials/footer') %>

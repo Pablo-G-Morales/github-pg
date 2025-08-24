@@ -1,0 +1,48 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Insumos</h2>
+    <a href="/compras/insumos/nuevo" class="btn btn-success">
+      <i class="fa fa-plus"></i> Nuevo
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Img.</th>
+          <th>Precio Q</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% insumos.forEach(i => { %>
+          <tr>
+            <td><%= i.id %></td>
+            <td><%= i.nombre %></td>
+            <td>
+              <% if (i.imagen) { %>
+                <img src="<%= i.imagen %>" style="height:40px;">
+              <% } else { %>-<% } %>
+            </td>
+            <td><%= i.precio_estandar || '-' %></td>
+            <td>
+              <a href="/compras/insumos/<%= i.id %>/editar" class="btn btn-sm btn-primary">
+                <i class="fa fa-edit"></i>Editar
+              </a>
+              <a href="/compras/insumos/<%= i.id %>" class="btn btn-sm btn-secondary">
+                <i class="fa fa-eye"></i>Ver
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

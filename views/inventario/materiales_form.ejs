@@ -1,0 +1,28 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= material.id ? 'Editar' : 'Nuevo' %> material</h2>
+
+  <form action="<%= material.id ? '/inventario/materiales/' + material.id + '/editar'
+                                 : '/inventario/materiales/nuevo' %>"
+        method="POST" class="row g-3">
+
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input type="text" name="nombre" required class="form-control"
+             value="<%= material.nombre %>">
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Descripción</label>
+      <textarea name="descripcion" rows="3" class="form-control"><%= material.descripcion %></textarea>
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-success"><i class="fa fa-save"></i> Guardar</button>
+      <a href="/inventario/materiales" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
