@@ -1,0 +1,81 @@
+<%- include('partials/header', { title: 'Mi cuenta', user }); %>
+
+<style>
+  .user-foto {
+    width: 140px; height: 140px;
+    object-fit: cover; object-position: center;
+  }
+</style>
+
+<h2 class="mb-4">🛡️ Cambiar contraseña y foto</h2>
+
+<% if (typeof error === 'string' && error) { %>
+  <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
+<form class="row g-3" method="POST" enctype="multipart/form-data" autocomplete="on">
+  <!-- Foto actual + nueva -->
+  <div class="col-md-4 text-center">
+    <% if (data?.foto_perfil) { %>
+      <img src="data:image/png;base64,<%= Buffer.from(data.foto_perfil).toString('base64') %>"
+           class="rounded-circle shadow user-foto mb-2" alt="Foto actual">
+    <% } else { %>
+      <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center user-foto mb-2">
+        Sin foto
+      </div>
+    <% } %>
+    <label class="form-label">Nueva foto (opcional)</label>
+    <input type="file" class="form-control" name="foto" accept="image/*">
+    <small class="text-muted d-block mt-1">Se recortará automáticamente al mostrarla.</small>
+  </div>
+
+  <!-- Contraseña -->
+  <div class="col-md-8">
+    <div class="mb-3">
+      <label class="form-label">Contraseña actual</label>
+      <div class="input-group">
+        <input type="password" id="pwdActual" name="actual" class="form-control" placeholder="Requerida para cambiar la contraseña">
+        <button class="btn btn-outline-secondary" type="button" data-toggle="pwdActual">👁️</button>
+      </div>
+      <small class="text-muted">Si no deseas cambiar la contraseña, deja estos campos vacíos.</small>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Nueva contraseña</label>
+      <div class="input-group">
+        <input type="password" id="pwdNueva" name="nueva" class="form-control" autocomplete="new-password">
+        <button class="btn btn-outline-secondary" type="button" data-toggle="pwdNueva">👁️</button>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Confirmar nueva contraseña</label>
+      <div class="input-group">
+        <input type="password" id="pwdConfirmar" name="confirmar" class="form-control" autocomplete="new-password">
+        <button class="btn btn-outline-secondary" type="button" data-toggle="pwdConfirmar">👁️</button>
+      </div>
+    </div>
+
+    <div class="mt-2">
+      <button class="btn btn-primary">Guardar cambios</button>
+      <a href="/perfil" class="btn btn-secondary ms-2">Cancelar</a>
+    </div>
+  </div>
+</form>
+
+<script>
+  // Toggledor genérico para inputs de contraseña
+  document.querySelectorAll('button[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-toggle');
+      const input = document.getElementById(id);
+      if (!input) return;
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.textContent = show ? '🙈' : '👁️';
+      btn.setAttribute('aria-pressed', String(show));
+    });
+  });
+</script>
+
+<%- include('partials/footer'); %>

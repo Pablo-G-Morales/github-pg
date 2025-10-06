@@ -1,0 +1,79 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4" style="max-width: 980px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <div class="d-flex gap-2">
+      <a href="/compras-v4/facturas" class="btn btn-outline-secondary">
+        <i class="fa fa-arrow-left"></i> Volver
+      </a>
+      <a href="/compras-v2/<%= factura.compra_id %>" class="btn btn-info">
+        <i class="fa fa-receipt"></i> Ver compra
+      </a>
+      <% if (factura.archivo_path) { %>
+        <a href="<%= factura.archivo_path %>" target="_blank" class="btn btn-secondary">
+          <i class="fa fa-file"></i> Archivo
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4"><strong>Factura #:</strong> <%= factura.id %></div>
+        <div class="col-md-4"><strong>Número:</strong> <%= factura.numero_factura || '—' %></div>
+        <div class="col-md-4"><strong>Compra:</strong> <a href="/compras-v2/<%= factura.compra_id %>" class="link-primary">#<%= factura.compra_id %></a></div>
+
+        <div class="col-md-4"><strong>Proveedor:</strong> <%= factura.proveedor_nombre %></div>
+        <div class="col-md-4"><strong>Bodega:</strong> <%= factura.bodega_nombre %></div>
+        <div class="col-md-4"><strong>Fecha compra:</strong> <%= new Date(factura.fecha_compra).toLocaleString() %></div>
+
+        <div class="col-md-4"><strong>Total compra:</strong> Q <%= Number(factura.total).toFixed(2) %></div>
+        <div class="col-md-4"><strong>Forma de pago:</strong> <%= factura.forma_pago_nombre || '—' %></div>
+        <div class="col-md-4"><strong>Condición:</strong> <%= factura.condicion_pago_nombre || '—' %></div>
+        <div class="col-md-4"><strong>Tipo documento:</strong> <%= factura.tipo_documento_nombre || '—' %></div>
+
+        <div class="col-md-8"><strong>Archivo:</strong>
+          <% if (factura.archivo_path) { %>
+            <a href="<%= factura.archivo_path %>" target="_blank">Ver archivo</a>
+          <% } else { %> — <% } %>
+        </div>
+
+        <div class="col-md-4"><strong>Creado por:</strong> <%= factura.creado_por_nombre || '—' %></div>
+        <div class="col-md-4"><strong>Creado en:</strong> <%= new Date(factura.creado_en).toLocaleString() %></div>
+        <div class="col-md-4"><strong>Estado compra:</strong>
+          <span class="badge <%= factura.estado==='COMPLETADO'?'bg-success':'bg-warning text-dark' %>"><%= factura.estado %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h5 class="mb-2">Detalle de productos</h5>
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Producto</th>
+          <th class="text-end">Cantidad</th>
+          <th class="text-end">Precio</th>
+          <th class="text-end">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (detalles||[]).forEach((d,i)=>{ %>
+          <tr>
+            <td><%= i+1 %></td>
+            <td><%= d.producto_nombre || '—' %></td>
+            <td class="text-end"><%= Number(d.cantidad).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number(d.precio_unitario).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number(d.cantidad*d.precio_unitario).toFixed(2) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

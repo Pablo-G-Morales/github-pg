@@ -1,0 +1,149 @@
+<!-- Modal #1: Catálogo -->
+<div class="modal fade" id="modalCatalogo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Catálogo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Barra superior: buscador + proveedor + pestañas -->
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Buscar</label>
+            <input id="catSearch" class="form-control" placeholder="Nombre...">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Proveedor</label>
+            <select id="catProveedor" class="form-select">
+              <option value="">— Elegir —</option>
+              <% proveedores.forEach(p => { %>
+                <option value="<%= p.id %>"><%= p.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Bodega (stock)</label>
+            <select id="catBodega" class="form-select">
+              <option value="">— Todas —</option>
+              <% bodegas.forEach(b => { %>
+                <option value="<%= b.id %>"><%= b.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <ul class="nav nav-pills mb-3" id="catTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="catTabProductos" data-bs-toggle="pill" data-bs-target="#catPane" type="button" role="tab">Productos</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="catTabInsumos" data-bs-toggle="pill" data-bs-target="#catPane" type="button" role="tab">Insumos</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="catTabProveedor" type="button" role="tab">Elegir proveedor</button>
+          </li>
+        </ul>
+
+        <!-- Grid -->
+        <div class="row row-cols-2 row-cols-md-4 g-3" id="catGrid">
+          <!-- tarjetas dinámicas -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const cat = {
+    clase: 'PRODUCTO',
+    search: '',
+    proveedor_id: '',
+    bodega_id: ''
+  };
+
+  function emit(name, detail) { document.dispatchEvent(new CustomEvent(name, { detail })); }
+
+  async function loadCatalog() {
+    const params = new URLSearchParams();
+    params.set('clase', cat.clase);
+    if (cat.search)       params.set('search', cat.search);
+    if (cat.proveedor_id) params.set('proveedor_id', cat.proveedor_id);
+    if (cat.bodega_id)    params.set('bodega_id', cat.bodega_id);
+
+    const r = await fetch('/compras-v3/api/items?' + params.toString());
+    const data = await r.json();
+
+    const grid = $('#catGrid');
+    grid.innerHTML = '';
+
+    (data.items || []).forEach(it => {
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.innerHTML = `
+        <div class="card h-100 shadow-sm cat-card" role="button" data-id="${it.item_id}" data-nombre="${it.nombre}">
+          <img src="${it.imagen ? '/img/products/'+it.imagen : '/img/products/no-image.png'}" class="card-img-top" style="object-fit:cover; height:130px">
+          <div class="card-body">
+            <div class="fw-bold mb-1">${it.nombre}</div>
+            <div class="small text-muted">Precio: ${it.precio != null ? 'Q ' + Number(it.precio).toFixed(2) : '—'}</div>
+            ${it.clase==='PRODUCTO' ? `<div class="small">Stock: ${it.stock ?? 0}</div>` : ''}
+          </div>
+        </div>
+      `;
+      grid.appendChild(col);
+    });
+  }
+
+  // Tabs
+  $('#catTabProductos').addEventListener('click', () => { cat.clase='PRODUCTO'; loadCatalog(); });
+  $('#catTabInsumos').addEventListener('click', () => { cat.clase='INSUMO'; loadCatalog(); });
+  $('#catTabProveedor').addEventListener('click', () => {
+    const sel = $('#catProveedor');
+    const opt = sel.options[sel.selectedIndex];
+    emit('cat:setProveedor', { id: sel.value || null, nombre: opt?.text || null });
+  });
+
+  // Filtros
+  $('#catSearch').addEventListener('input', (e)=>{ cat.search = e.target.value.trim(); loadCatalog(); });
+  $('#catProveedor').addEventListener('change', (e)=>{ cat.proveedor_id = e.target.value; loadCatalog(); emit('cat:setProveedor', { id: e.target.value||null, nombre: e.target.selectedOptions[0]?.text||null }); });
+  $('#catBodega').addEventListener('change', (e)=>{ cat.bodega_id = e.target.value; loadCatalog(); });
+
+  // Click en tarjeta
+  document.addEventListener('click', (e) => {
+    const card = e.target.closest('.cat-card');
+    if (!card) return;
+    const id  = Number(card.dataset.id);
+    const nom = card.dataset.nombre;
+    if (cat.clase === 'PRODUCTO') {
+      emit('cat:openDetail', { item_id: id, nombre: nom });
+    } else {
+      // Para INSUMO: no hay detalle; agregar con cantidad=1 y precio=0 (se edita en Orden)
+      document.dispatchEvent(new CustomEvent('cat:addInsumo', { detail: { item_id: id, nombre: nom } }));
+    }
+  });
+
+  // Hook para agregar insumo directo
+  document.addEventListener('cat:addInsumo', (ev) => {
+    document.dispatchEvent(new CustomEvent('orden:addItem', {
+      detail: { item_id: ev.detail.item_id, nombre: ev.detail.nombre, clase:'INSUMO', cantidad: 1, precio_unitario: 0 }
+    }));
+  });
+
+  // Al abrir el modal, precarga
+  $('#modalCatalogo').addEventListener('shown.bs.modal', loadCatalog);
+
+  // Puente hacia el contenedor principal
+  document.addEventListener('orden:addItem', (ev) => {
+    // El contenedor principal escucha y agrega a la tabla
+    const e = new CustomEvent('v3:addItem', { detail: ev.detail });
+    document.dispatchEvent(e);
+  });
+})();
+</script>

@@ -1,0 +1,72 @@
+<%- include('../partials/header', { title }) %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Autorizar compras / Registrar factura</h2>
+
+  <div class="table-responsive">
+    <table id="tblAutorizar" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Proveedor</th>
+          <th>Bodega</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (compras || []).forEach(c => { %>
+          <tr>
+            <td><%= c.id %></td>
+            <td><%= c.proveedor_nombre %></td>
+            <td><%= c.bodega_nombre %></td>
+            <td><%= c.fecha_compra.toLocaleString() %></td>
+            <td>
+              <% if (c.estado === 'APROBADO') { %>
+                <span class="badge bg-success">APROBADO</span>
+              <% } else { %>
+                <span class="badge bg-warning text-dark"><%= c.estado %></span>
+              <% } %>
+            </td>
+            <td>Q <%= Number(c.total).toFixed(2) %></td>
+            <td class="text-nowrap">
+              <a href="/compras-v2/<%= c.id %>" class="btn btn-sm btn-info me-1">
+                <i class="fa fa-eye"></i> Ver
+              </a>
+              <a href="/compras-v4/autorizar/<%= c.id %>" class="btn btn-sm btn-primary">
+                <i class="fa fa-check"></i> Autorizar
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    $('#tblAutorizar').DataTable({
+      order: [[0, 'desc']],
+      pageLength: 10,
+      language:{
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "_START_–_END_ de _TOTAL_",
+        infoEmpty: "0–0 de 0",
+        emptyTable: "Sin resultados",
+        paginate:{ previous:"Anterior", next:"Siguiente" }
+      },
+      columnDefs: [
+        { targets: 0, width: 60 },
+        { targets: 6, orderable: false }
+      ]
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

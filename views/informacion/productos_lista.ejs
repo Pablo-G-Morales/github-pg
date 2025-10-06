@@ -1,0 +1,132 @@
+<%- include('../partials/header') %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <!-- Título y acciones -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Información de sublimación (Producto–Plancha)</h2>
+    <div class="d-flex gap-2">
+      <a href="/informacion/nueva" class="btn btn-outline-success">
+        <i class="fa fa-plus"></i> Nueva información
+      </a>
+      <a href="/informacion/planchas" class="btn btn-outline-primary">
+        <i class="fa fa-list"></i> Ver planchas
+      </a>
+      <a href="/informacion/planchas/nueva" class="btn btn-success">
+        <i class="fa fa-plus"></i> Nueva plancha
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtro de plancha (server-side) -->
+  <form class="card mb-3 shadow-sm border-0" method="get" action="/informacion" id="frmFiltros">
+    <div class="card-body row g-2 align-items-end">
+      <div class="col-12 col-md-6">
+        <label class="form-label mb-1">Plancha</label>
+        <div class="input-group">
+          <select name="plancha_id" class="form-select" id="selPlancha">
+            <option value="">Todas</option>
+            <% (planchas || []).forEach(p => { %>
+              <option value="<%= p.id %>" <%= (filtro?.plancha_id == p.id ? 'selected' : '') %>><%= p.nombre %></option>
+            <% }) %>
+          </select>
+          <button class="btn btn-outline-primary" type="submit">
+            <i class="fa fa-filter"></i> Filtrar
+          </button>
+        </div>
+        <div class="form-text">Este filtro es del servidor; el buscador de la derecha es de la tabla.</div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Tabla -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table id="tblInfo" class="table table-sm table-striped align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th style="width:56px">#</th>
+              <th>Producto</th>
+              <th>Plancha</th>
+              <th style="width:100px">Img.</th>
+              <th class="text-center" style="width:140px">Temp (°C)</th>
+              <th class="text-center" style="width:140px">Tiempo (s)</th>
+              <th class="text-end text-nowrap" style="width:180px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (datos && datos.length) { %>
+              <% datos.forEach((r, i) => { %>
+                <tr>
+                  <td><%= i + 1 %></td>
+                  <td class="fw-semibold"><%= r.producto %></td>
+                  <td><%= r.plancha %></td>
+                  <td>
+                    <% if (r.plancha_imagen) { %>
+                      <img src="<%= r.plancha_imagen %>" alt="plancha" class="rounded border"
+                           style="width:72px;height:50px;object-fit:cover;">
+                    <% } %>
+                  </td>
+                  <td class="text-center">
+                    <% if (r.temperatura != null) { %>
+                      <span class="badge bg-primary-subtle text-primary fw-semibold"><%= r.temperatura %> °C</span>
+                    <% } else { %>
+                      <span class="text-muted">—</span>
+                    <% } %>
+                  </td>
+                  <td class="text-center">
+                    <% if (r.tiempo != null) { %>
+                      <span class="badge bg-success-subtle text-success fw-semibold"><%= r.tiempo %> s</span>
+                    <% } else { %>
+                      <span class="text-muted">—</span>
+                    <% } %>
+                  </td>
+                  <td class="text-end text-nowrap">
+                    <a href="/informacion/ficha/<%= r.id %>" class="btn btn-sm btn-info me-1">
+                      <i class="fa fa-eye"></i> Ficha
+                    </a>
+                    <a href="/informacion/<%= r.id %>/editar" class="btn btn-sm btn-primary">
+                      <i class="fa fa-pen"></i> Editar
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <% if (!datos || !datos.length) { %>
+    <div class="alert alert-light border mt-3" role="alert">
+      <div class="fw-semibold mb-1">Sin resultados</div>
+      <div class="text-muted">Cambia la plancha o agrega nueva información.</div>
+    </div>
+  <% } %>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function () {
+    // Opcional: auto-submit al cambiar plancha
+    $('#selPlancha').on('change', function(){ this.form.submit(); });
+
+    // DataTables con buscador propio (como en Unidades)
+    $('#tblInfo').DataTable({
+      language:{
+        search:"Buscar:",
+        lengthMenu:"Mostrar _MENU_ registros",
+        info:"_START_–_END_ de _TOTAL_",
+        paginate:{previous:"Anterior", next:"Siguiente"},
+        emptyTable:"Sin datos para mostrar"
+      },
+      columnDefs: [
+        { targets: [3, 6], orderable: false } // imagen y acciones
+      ]
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

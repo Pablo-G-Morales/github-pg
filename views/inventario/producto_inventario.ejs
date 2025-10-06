@@ -1,109 +1,108 @@
-<%- include('../partials/header') %>
-
-<link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-
-<style>
-  .prod-card{border:1px solid #dee2e6;border-radius:.8rem;padding:1rem 1.25rem;background:#fff}
-  .prod-img{width:100%;max-height:180px;object-fit:contain;margin-bottom:.5rem}
-  th,td{vertical-align:middle}
-</style>
+<%- include('../partials/header', { title }) %>
 
 <div class="container my-4">
-  <!-- Cabecera -->
-  <h1 class="text-center fw-bold"><%= producto.nombre %></h1>
-  <% if(producto.descripcion){ %>
-    <p class="text-center text-muted mb-4"><%= producto.descripcion %></p>
-  <% } %>
+  <h2><%= producto.nombre %></h2>
 
-  <div class="row g-4">
-    <!-- ► Tarjeta producto -->
-    <aside class="col-lg-4">
-      <div class="prod-card">
-        <% if(producto.imagen){ %>
-          <img src="<%= producto.imagen %>" class="prod-img" alt="Producto">
-        <% } %>
-        <p class="mb-1"><strong>Marca:</strong> <%= producto.marca || '—' %></p>
-        <p class="mb-1"><strong>Material:</strong> <%= producto.material || '—' %></p>
-        <p class="mb-1"><strong>Color:</strong> <%= producto.color || '—' %></p>
-        <p class="mb-1"><strong>Forma:</strong> <%= producto.forma || '—' %></p>
-        <% if(producto.capacidad){ %>
-          <p class="mb-1"><strong>Capacidad:</strong>
-            <%= producto.capacidad %> <%= producto.unidad || '' %></p>
-        <% } %>
-        <% if(producto.precio_venta){ %>
-          <p class="mb-0"><strong>P-venta sugerido:</strong>
-            Q <%= (+producto.precio_venta).toFixed(2) %></p>
-        <% } %>
-      </div>
-    </aside>
+  <!-- Datos básicos del producto -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <img src="/img/products/<%= producto.imagen || 'no-image.png' %>" alt="<%= producto.nombre %>" class="img-fluid rounded border">
+    </div>
+    <div class="col-md-8">
+      <ul class="list-group">
+        <li class="list-group-item"><strong>Marca:</strong> <%= producto.marca || '-' %></li>
+        <li class="list-group-item"><strong>Material:</strong> <%= producto.material || '-' %></li>
+        <li class="list-group-item"><strong>Color:</strong> <%= producto.color || '-' %></li>
+        <li class="list-group-item"><strong>Forma:</strong> <%= producto.forma || '-' %></li>
+        <li class="list-group-item"><strong>Unidad:</strong> <%= producto.unidad || '-' %></li>
+        <li class="list-group-item"><strong>Capacidad:</strong> <%= producto.capacidad || '-' %></li>
+        <li class="list-group-item"><strong>Precio venta sugerido:</strong> Q <%= producto.precio_venta_sugerido || '0.00' %></li>
+      </ul>
+    </div>
+  </div>
 
-    <!-- ► Inventario  -->
-    <section class="col-lg-8">
-      <h4 class="border-bottom pb-2 mb-3">Existencias por bodega / proveedor</h4>
-      <table class="table table-sm table-bordered">
-        <thead class="table-light">
+  <!-- Existencias por bodega -->
+  <h4>Existencias por bodega</h4>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Bodega</th>
+          <th class="text-end">Stock disponible</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% stocks.forEach(i => { %>
           <tr>
-            <th>Bodega</th>
-            <th>Proveedor</th>
-            <th class="text-end">Cant.</th>
-            <th class="text-end">Costo&nbsp;(Q)</th>
-            <th class="text-end">Venta&nbsp;(Q)</th>
+            <td><%= i.bodega %></td>
+            <td class="text-end"><%= i.stock %></td>
           </tr>
-        </thead>
-        <tbody>
-          <% inventario.forEach(i=>{ %>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Último precio por proveedor -->
+  <h4>Último precio por proveedor</h4>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm table-bordered align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Proveedor</th>
+          <th>Precio compra (Q)</th>
+          <th>Precio venta (Q)</th>
+          <th>Fecha vigencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (ultimos.length) { %>
+          <% ultimos.forEach(u => { %>
             <tr>
-              <td><%= i.bodega %></td>
-              <td><%= i.proveedor %></td>
-              <td class="text-end"><%= i.cantidad %></td>
-              <td class="text-end"><%= (+i.precio_compra).toFixed(2) %></td>
-              <td class="text-end">
-                <%= i.precio_venta ? (+i.precio_venta).toFixed(2) : '—' %>
-              </td>
+              <td><%= u.proveedor %></td>
+              <td><%= u.precio_compra %></td>
+              <td><%= u.precio_venta || '-' %></td>
+              <td><%= new Date(u.fecha_vigencia).toLocaleDateString() %></td>
             </tr>
           <% }) %>
-        </tbody>
-        <tfoot class="table-light">
-          <tr>
-            <th colspan="3" class="text-end">Totales&nbsp;(Q)</th>
-            <th class="text-end"><%= (+totales.total_compra||0).toFixed(2) %></th>
-            <th class="text-end"><%= (+totales.total_venta ||0).toFixed(2) %></th>
-          </tr>
-        </tfoot>
-      </table>
+        <% } else { %>
+          <tr><td colspan="4" class="text-center text-muted">Sin precios registrados</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 
-      <!-- ► Resumen proveedor -->
-      <h4 class="border-bottom pb-2 mt-5 mb-3">Resumen por proveedor</h4>
-      <table class="table table-sm table-bordered mb-4">
-        <thead class="table-light">
-          <tr>
-            <th>Proveedor</th>
-            <th class="text-end">Stock</th>
-            <th class="text-end">Costo&nbsp;mín</th>
-            <th class="text-end">Costo&nbsp;máx</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% porProveedor.forEach(r=>{ %>
+  <!-- Histórico de precios por proveedor -->
+  <h4>Histórico de precios</h4>
+  <div class="table-responsive mb-4">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Proveedor</th>
+          <th>Precio compra (Q)</th>
+          <th>Precio venta (Q)</th>
+          <th>Fecha vigencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (historial.length) { %>
+          <% historial.forEach(h => { %>
             <tr>
-              <td><%= r.proveedor %></td>
-              <td class="text-end"><%= r.stock %></td>
-              <td class="text-end"><%= (+r.costo_min).toFixed(2) %></td>
-              <td class="text-end"><%= (+r.costo_max).toFixed(2) %></td>
+              <td><%= h.proveedor %></td>
+              <td><%= h.precio_compra %></td>
+              <td><%= h.precio_venta || '-' %></td>
+              <td><%= new Date(h.fecha_vigencia).toLocaleDateString() %></td>
             </tr>
           <% }) %>
-        </tbody>
-      </table>
+        <% } else { %>
+          <tr><td colspan="4" class="text-center text-muted">Sin histórico disponible</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 
-      <a href="/inventario/productos/<%= producto.id %>/inventario/nuevo"
-         class="btn btn-primary me-2">
-        <i class="fa fa-plus"></i> Agregar inventario
-      </a>
-      <a href="/inventario/stock" class="btn btn-secondary">
-        <i class="fa fa-arrow-left"></i> Volver al listado
-      </a>
-    </section>
+  <div class="mt-3">
+    <a href="/inventario/productos" class="btn btn-outline-secondary">Volver al listado</a>
+    <a href="/inventario/productos/<%= producto.id %>/inventario/nuevo" class="btn btn-success">+ Nuevo precio</a>
   </div>
 </div>
 

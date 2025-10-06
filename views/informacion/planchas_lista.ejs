@@ -1,17 +1,22 @@
 <%- include('../partials/header') %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-<section class="container py-4">
+<div class="container py-4">
   <h2 class="h4 mb-3">Planchas</h2>
 
-  <a href="/informacion/planchas/nuevo" class="btn btn-success mb-3">
+  <a href="/informacion/planchas/nueva" class="btn btn-success mb-3">
     <i class="fa fa-plus"></i> Nueva plancha
   </a>
 
   <div class="table-responsive">
-    <table class="table table-sm table-striped align-middle">
+    <table id="tblPlanchas" class="table table-sm table-striped align-middle">
       <thead class="table-dark">
         <tr>
-          <th>#</th><th>Nombre</th><th>Imagen</th><th>Acciones</th>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Imagen</th>
+          <th>Usos</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -24,19 +29,121 @@
                 <img src="<%= p.imagen %>" alt="plancha" style="height:48px;">
               <% } else { %>-<% } %>
             </td>
-            <td>
-              <a href="/informacion/planchas/<%= p.id %>/editar" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
-              <form action="/informacion/planchas/<%= p.id %>/eliminar" method="post" style="display:inline;">
-                <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?');">
-                  <i class="fa fa-trash"></i>
-                </button>
-              </form>
+            <td><%= p.usos %></td>
+            <td class="text-nowrap">
+              <!-- Botón EDITAR: abre modal y pasa datos por data-* -->
+              <button
+                class="btn btn-sm btn-primary me-1 btn-edit-plancha"
+                data-bs-toggle="modal"
+                data-bs-target="#modalEditarPlancha"
+                data-id="<%= p.id %>"
+                data-nombre="<%- p.nombre %>"
+                data-imagen="<%- p.imagen || '' %>">
+                <i class="fa fa-pen"></i> Editar
+              </button>
+
+              <!-- Eliminar normal por POST -->
             </td>
           </tr>
         <% }) %>
       </tbody>
     </table>
   </div>
-</section>
+</div>
 
+<!-- Modal EDITAR PLANCHA -->
+<div class="modal fade" id="modalEditarPlancha" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="frmEditarPlancha" method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar plancha</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id">
+        <div class="mb-3">
+          <label class="form-label">Nombre</label>
+          <input type="text" name="nombre" id="edit-nombre" class="form-control" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">URL de imagen (opcional)</label>
+          <!-- Importante: el backend espera name="imagen_url" -->
+          <input type="url" name="imagen_url" id="edit-imagen-url" class="form-control" placeholder="https://.../plancha.jpg">
+        </div>
+        <div id="edit-preview" class="text-center" style="display:none;">
+          <img id="edit-preview-img" src="" alt="preview" style="max-height:140px;border:1px solid #ddd;border-radius:6px;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="fa fa-save"></i> Guardar cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    // DataTable (orden por nombre por defecto; ajusta a [0,'asc'] si quieres por ID)
+    $('#tblPlanchas').DataTable({
+      language:{
+        search:"Buscar:",
+        lengthMenu:"Mostrar _MENU_ registros",
+        info:"_START_–_END_ de _TOTAL_",
+        paginate:{previous:"Anterior", next:"Siguiente"},
+        emptyTable:"Sin datos para mostrar"
+      },
+      order:[[1,'asc']]
+    });
+
+    // Bootstrap modal handler
+    const modalEl = document.getElementById('modalEditarPlancha');
+    const frm = document.getElementById('frmEditarPlancha');
+    const inputNombre = document.getElementById('edit-nombre');
+    const inputImgUrl = document.getElementById('edit-imagen-url');
+    const inputId = document.getElementById('edit-id');
+    const prevWrap = document.getElementById('edit-preview');
+    const prevImg = document.getElementById('edit-preview-img');
+
+    // Al abrir el modal, poblar campos desde el botón
+    modalEl.addEventListener('show.bs.modal', function (event) {
+      const btn = event.relatedTarget; // botón que disparó el modal
+      const id = btn.getAttribute('data-id');
+      const nombre = btn.getAttribute('data-nombre') || '';
+      const imagen = btn.getAttribute('data-imagen') || '';
+
+      inputId.value = id;
+      inputNombre.value = nombre;
+      inputImgUrl.value = imagen;
+
+      // preview
+      if (imagen) {
+        prevImg.src = imagen;
+        prevWrap.style.display = 'block';
+      } else {
+        prevImg.src = '';
+        prevWrap.style.display = 'none';
+      }
+
+      // set action dinamicamente
+      frm.setAttribute('action', '/informacion/planchas/' + id + '/editar');
+    });
+
+    // Actualizar preview cuando el usuario cambia la URL
+    inputImgUrl.addEventListener('input', function(){
+      const v = this.value.trim();
+      if (v) {
+        prevImg.src = v;
+        prevWrap.style.display = 'block';
+      } else {
+        prevImg.src = '';
+        prevWrap.style.display = 'none';
+      }
+    });
+  });
+</script>
 <%- include('../partials/footer') %>

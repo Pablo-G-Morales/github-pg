@@ -1,0 +1,66 @@
+<!-- Modal #2: Detalle del producto -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detNombre">Detalle del producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <img id="detImg" src="/img/products/no-image.png" class="img-fluid rounded border">
+          </div>
+          <div class="col-md-8">
+            <table class="table table-sm">
+              <tbody>
+                <tr><th>Marca</th><td id="detMarca">-</td></tr>
+                <tr><th>Material</th><td id="detMaterial">-</td></tr>
+                <tr><th>Color</th><td id="detColor">-</td></tr>
+                <tr><th>Forma</th><td id="detForma">-</td></tr>
+                <tr><th>Unidad</th><td id="detUnidad">-</td></tr>
+              </tbody>
+            </table>
+            <div class="h5 mt-3">Stock en bodega: <span id="detStock">0</span></div>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Cantidad</label>
+            <input id="detCantidad" type="number" min="1" step="1" class="form-control" value="1">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Precio unitario (Q)</label>
+            <input id="detPrecio" type="number" min="0" step="0.01" class="form-control" placeholder="Usa el último precio si existe">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-success" id="btnAgregarDetalle" data-item-id="">Agregar</button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // El contenedor principal escucha este evento para añadir el item
+  const add = (detail) => document.dispatchEvent(new CustomEvent('v3:addItem', { detail }));
+
+  document.getElementById('btnAgregarDetalle').addEventListener('click', () => {
+    const item_id = Number(document.getElementById('btnAgregarDetalle').dataset.itemId);
+    const nombre  = document.getElementById('btnAgregarDetalle').dataset.itemNombre;
+    const cantidad = Number(document.getElementById('detCantidad').value || 0);
+    const precio   = Number(document.getElementById('detPrecio').value || 0);
+    if (!item_id || cantidad <= 0 || precio < 0) return;
+
+    add({ item_id, nombre, clase:'PRODUCTO', cantidad, precio_unitario: precio });
+  });
+})();
+</script>

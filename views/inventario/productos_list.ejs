@@ -18,6 +18,8 @@
           <th>#</th>
           <th>Foto</th>
           <th>Nombre</th>
+          <!-- 👇 NUEVA COLUMNA -->
+          <th>Clasificación</th>
           <th>Marca</th>
           <th>Material</th>
           <th>Color</th>
@@ -39,6 +41,15 @@
             </td>
 
             <td><%= p.nombre %></td>
+
+            <!-- 👇 NUEVA CELDA: badge por clase -->
+            <td>
+              <% const isProd = (p.clase === 'PRODUCTO'); %>
+              <span class="badge <%= isProd ? 'bg-primary' : 'bg-warning text-dark' %>">
+                <%= isProd ? 'Producto' : 'Insumo' %>
+              </span>
+            </td>
+
             <td><%= p.marca    || '—' %></td>
             <td><%= p.material || '—' %></td>
             <td><%= p.color    || '—' %></td>

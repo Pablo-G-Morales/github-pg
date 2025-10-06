@@ -1,0 +1,261 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container my-4" id="comprasV3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><%= compra ? `Editar compra #${compra.id}` : 'Nueva compra' %></h3>
+    <div class="d-flex gap-2">
+      <a href="/compras" class="btn btn-outline-secondary">Volver</a>
+      <button id="btnGuardar" class="btn btn-primary">Guardar</button>
+    </div>
+  </div>
+
+  <!-- Cabecera mínima -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Fecha/hora</label>
+      <input type="datetime-local" id="fecha_compra" class="form-control"
+             value="<%= compra?.fecha_compra_local || (()=>{const d=new Date(); const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`})() %>">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Bodega (para PRODUCTO)</label>
+      <select id="bodega_id" class="form-select">
+        <option value="">Seleccione…</option>
+        <% bodegas.forEach(b => { %>
+          <option value="<%= b.id %>"><%= b.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Notas</label>
+      <input id="notas" class="form-control" placeholder="Opcional">
+    </div>
+  </div>
+
+  <!-- Selector de proveedor (se elige también en el Modal #1) -->
+  <div class="mb-3">
+    <button class="btn btn-info me-2" id="btnElegirProveedor">Elegir proveedor</button>
+    <span id="proveedorBadge" class="badge bg-secondary">Proveedor: —</span>
+    <input type="hidden" id="proveedor_id">
+  </div>
+
+  <!-- Botones para abrir catálogo -->
+  <div class="mb-3">
+    <button class="btn btn-success me-2" id="btnAbrirProductos">Ver Productos</button>
+    <button class="btn btn-primary" id="btnAbrirInsumos">Ver Insumos</button>
+  </div>
+
+  <!-- Orden actual -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong>Orden actual</strong>
+      <span class="text-muted" id="totalLabel">Total: Q 0.00</span>
+    </div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm align-middle" id="tblOrden">
+        <thead>
+          <tr>
+            <th>Clase</th>
+            <th>Ítem</th>
+            <th class="text-end">Cantidad</th>
+            <th class="text-end">Precio Unit.</th>
+            <th class="text-end">Subtotal</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody><!-- filas dinámicas --></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modales -->
+<%- include('./_modal_catalogo', { proveedores, bodegas }) %>
+<%- include('./_modal_detalle') %>
+
+<script>
+(() => {
+  // ---------- Estado ----------
+  const state = {
+    proveedor_id: null,
+    proveedor_nombre: null,
+    bodega_id: null,
+    clase: 'PRODUCTO',         // pestaña activa del catálogo
+    search: '',
+    items: []                  // {item_id, clase, nombre, cantidad, precio_unitario}
+  };
+
+  // ---------- Helpers ----------
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const fmt = n => (Number(n)||0).toFixed(2);
+
+  function setProveedor(id, nombre) {
+    state.proveedor_id = id ? Number(id) : null;
+    state.proveedor_nombre = nombre || null;
+    $('#proveedor_id').value = id || '';
+    $('#proveedorBadge').textContent = 'Proveedor: ' + (nombre || '—');
+  }
+  function setBodega(id) { state.bodega_id = id ? Number(id) : null; }
+
+  function renderOrden() {
+    const tbody = $('#tblOrden tbody');
+    tbody.innerHTML = '';
+    let total = 0;
+
+    state.items.forEach((it, idx) => {
+      const sub = Number(it.cantidad) * Number(it.precio_unitario);
+      total += sub;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="badge ${it.clase==='PRODUCTO'?'bg-success':'bg-primary'}">${it.clase}</span></td>
+        <td>${it.nombre || ('#' + it.item_id)}</td>
+        <td class="text-end">
+          <input type="number" min="0" step="1" class="form-control form-control-sm qty" data-idx="${idx}" value="${it.cantidad}">
+        </td>
+        <td class="text-end">
+          <input type="number" min="0" step="0.01" class="form-control form-control-sm price" data-idx="${idx}" value="${it.precio_unitario}">
+        </td>
+        <td class="text-end">${fmt(sub)}</td>
+        <td><button class="btn btn-sm btn-link text-danger del" data-idx="${idx}">&times;</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    $('#totalLabel').textContent = 'Total: Q ' + fmt(total);
+  }
+
+  function addItem(it) {
+    // si ya existe (misma clase+id), agrupar por cantidad y último precio
+    const k = state.items.findIndex(x => x.item_id==it.item_id && x.clase===it.clase);
+    if (k >= 0) {
+      state.items[k].cantidad = Number(state.items[k].cantidad) + Number(it.cantidad||0);
+      if (it.precio_unitario) state.items[k].precio_unitario = Number(it.precio_unitario);
+    } else {
+      state.items.push(it);
+    }
+    renderOrden();
+  }
+
+  // ---------- Eventos cabecera ----------
+  $('#bodega_id').addEventListener('change', e => setBodega(e.target.value));
+  $('#btnElegirProveedor').addEventListener('click', () => {
+    // Abre modal catálogo en pestaña "Proveedor"
+    const modal = new bootstrap.Modal($('#modalCatalogo'));
+    $('#catTabProveedor').click();
+    modal.show();
+  });
+  $('#btnAbrirProductos').addEventListener('click', () => {
+    const modal = new bootstrap.Modal($('#modalCatalogo'));
+    $('#catTabProductos').click();
+    modal.show();
+  });
+  $('#btnAbrirInsumos').addEventListener('click', () => {
+    const modal = new bootstrap.Modal($('#modalCatalogo'));
+    $('#catTabInsumos').click();
+    modal.show();
+  });
+
+  // ---------- Delegación tabla Orden ----------
+  $('#tblOrden').addEventListener('input', (e) => {
+    const idx = Number(e.target.dataset.idx);
+    if (e.target.classList.contains('qty')) {
+      state.items[idx].cantidad = Number(e.target.value || 0);
+    } else if (e.target.classList.contains('price')) {
+      state.items[idx].precio_unitario = Number(e.target.value || 0);
+    }
+    renderOrden();
+  });
+  $('#tblOrden').addEventListener('click', (e) => {
+    if (e.target.classList.contains('del')) {
+      const idx = Number(e.target.dataset.idx);
+      state.items.splice(idx,1);
+      renderOrden();
+    }
+  });
+
+  // ---------- Modal Catálogo (hooks) ----------
+  // proveedor elegido en el modal
+  document.addEventListener('cat:setProveedor', (ev) => {
+    const { id, nombre } = ev.detail;
+    setProveedor(id, nombre);
+  });
+
+  // abrir detalle desde el modal (card click)
+  document.addEventListener('cat:openDetail', async (ev) => {
+    const { item_id, nombre } = ev.detail;
+    // Cargar detalle
+    const params = new URLSearchParams();
+    if (state.proveedor_id) params.set('proveedor_id', state.proveedor_id);
+    if (state.bodega_id)    params.set('bodega_id', state.bodega_id);
+
+    const r = await fetch(`/compras-v3/api/productos/${item_id}/detalle?` + params.toString());
+    const data = await r.json();
+    // Popular modal detalle
+    $('#detNombre').textContent = data.producto?.nombre || nombre || ('#'+item_id);
+    $('#detMarca').textContent  = data.producto?.marca || '-';
+    $('#detMaterial').textContent = data.producto?.material || '-';
+    $('#detColor').textContent  = data.producto?.color || '-';
+    $('#detForma').textContent  = data.producto?.forma || '-';
+    $('#detUnidad').textContent = data.producto?.unidad || '-';
+    $('#detStock').textContent  = (data.stock != null ? data.stock : 0);
+    $('#detPrecio').value       = (data.precio != null ? data.precio : '');
+    $('#detCantidad').value     = 1;
+    $('#detImg').src            = data.producto?.imagen ? (`/img/products/${data.producto.imagen}`) : '/img/products/no-image.png';
+
+    // Guardar id en dataset
+    $('#btnAgregarDetalle').dataset.itemId = item_id;
+    $('#btnAgregarDetalle').dataset.itemNombre = data.producto?.nombre || nombre || ('#'+item_id);
+
+    // Mostrar modal detalle
+    const m2 = new bootstrap.Modal($('#modalDetalle'));
+    m2.show();
+  });
+
+  // Agregar desde modal detalle
+  $('#btnAgregarDetalle').addEventListener('click', () => {
+    const item_id = Number($('#btnAgregarDetalle').dataset.itemId);
+    const nombre  = $('#btnAgregarDetalle').dataset.itemNombre;
+    const cantidad = Number($('#detCantidad').value || 0);
+    const precio   = Number($('#detPrecio').value || 0);
+    if (!item_id || cantidad <= 0 || precio < 0) return;
+
+    addItem({ item_id, nombre, clase:'PRODUCTO', cantidad, precio_unitario: precio });
+    bootstrap.Modal.getInstance($('#modalDetalle')).hide();
+  });
+
+  // ---------- Guardar ----------
+  $('#btnGuardar').addEventListener('click', async () => {
+    if (!state.proveedor_id) { alert('Elige un proveedor.'); return; }
+    const tieneProducto = state.items.some(i => i.clase==='PRODUCTO');
+    if (tieneProducto && !$('#bodega_id').value) { alert('Selecciona una bodega.'); return; }
+    if (state.items.length === 0) { alert('Agrega items a la orden.'); return; }
+
+    const payload = {
+      proveedor_id: state.proveedor_id,
+      bodega_id: $('#bodega_id').value || null,
+      fecha_compra: $('#fecha_compra').value,
+      notas: $('#notas').value || null,
+      items: state.items
+    };
+
+    const r = await fetch('/compras-v3', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    if (data.ok && data.redirect) {
+      window.location.href = data.redirect;
+    } else {
+      alert('No se pudo guardar. Revisa la consola.');
+      console.error(data);
+    }
+  });
+
+  // Init
+  setBodega($('#bodega_id').value);
+  renderOrden();
+})();
+</script>
+
+<%- include('../partials/footer') %>

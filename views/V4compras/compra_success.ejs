@@ -1,0 +1,102 @@
+<%- include('../partials/header', { title }) %>
+
+<section class="container py-4">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="/compras-v4">Nueva compra</a>
+      <a class="btn btn-secondary" href="/compras-v2">Ir a listado (v2)</a>
+    </div>
+  </div>
+
+  <!-- Aviso de éxito (cuando viene ?ok=1) -->
+  <% if (typeof ok !== 'undefined' && ok) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      Compra guardada.
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    <script>
+      // Quita ?ok=1 de la barra de direcciones sin recargar
+      (function () {
+        if (history.replaceState) {
+          const url = new URL(location.href);
+          url.searchParams.delete('ok');
+          history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+        }
+      })();
+    </script>
+  <% } %>
+
+  <!-- Resumen de la compra -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3"><strong>Proveedor:</strong> <%= compra.proveedor_nombre %></div>
+        <div class="col-md-3"><strong>Bodega:</strong> <%= compra.bodega_nombre %></div>
+        <div class="col-md-3">
+          <strong>Estado:</strong>
+          <%
+            const cls = compra.estado === 'APROBADO'   ? 'bg-success'
+                      : compra.estado === 'ANULADO'    ? 'bg-danger'
+                      : compra.estado === 'COMPLETADO' ? 'bg-secondary'
+                      : 'bg-warning text-dark'; // PENDIENTE u otros
+          %>
+          <span class="badge <%= cls %>"><%= compra.estado %></span>
+        </div>
+        <div class="col-md-3">
+          <strong>Total:</strong>
+          Q <%= Number(compra.total || 0).toFixed(2) %>
+        </div>
+
+        <div class="col-md-3">
+          <strong>Fecha/Hora:</strong>
+          <%= (compra.fecha_compra && compra.fecha_compra.toISOString)
+                ? compra.fecha_compra.toISOString().slice(0,16).replace('T', ' ')
+                : (compra.fecha_compra || '-') %>
+        </div>
+
+        <div class="col-md-9 d-flex justify-content-between align-items-center">
+          <div><strong>Notas:</strong> <%= compra.notas || '-' %></div>
+
+          <!-- Botón Aprobar (solo admin y si no está aprobado) -->
+          <% if (user && user.rol_id === 1 && compra.estado !== 'APROBADO') { %>
+            <form method="post" action="/compras-v4/<%= compra.id %>/aprobar" class="m-0">
+              <button class="btn btn-success">
+                <i class="fa fa-check me-1"></i> Aprobar y sumar al stock
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de productos -->
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Producto</th>
+          <th class="text-end">Cantidad</th>
+          <th class="text-end">Precio</th>
+          <th class="text-end">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (detalles || []).forEach((d, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= d.producto_nombre %></td>
+            <td class="text-end"><%= Number(d.cantidad).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number(d.precio_unitario).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number(d.cantidad * d.precio_unitario).toFixed(2) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

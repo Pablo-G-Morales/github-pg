@@ -1,0 +1,31 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4" style="max-width:640px">
+  <h2 class="h4 mb-3"><%= title %></h2>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <form method="post" action="/informacion/planchas/nueva">
+        <div class="mb-3">
+          <label class="form-label">Nombre de la plancha <span class="text-danger">*</span></label>
+          <input type="text" name="nombre" class="form-control" required placeholder="Ej. Plancha cónica para tazas">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">URL de imagen (opcional)</label>
+          <input type="url" name="imagen_url" class="form-control" placeholder="https://.../plancha.jpg">
+          <div class="form-text">Si no agregas imagen, se mostrará vacío en la tabla.</div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="/informacion" class="btn btn-outline-secondary">Cancelar</a>
+          <button class="btn btn-success" type="submit">
+            <i class="fa fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

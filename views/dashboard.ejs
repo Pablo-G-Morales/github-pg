@@ -1,7 +1,6 @@
 <%- include('partials/header', { title:'Dashboard', user }); %>
 
 <h1 class="mb-4">📊 Dashboard</h1>
-
 <p class="lead">Bienvenido al sistema de gestión de SubliRex.</p>
 
 <div class="row">
@@ -21,6 +20,20 @@
         <h5 class="card-title">Sistema de pedidos</h5>
         <p class="card-text">Visualiza y administra los pedidos personalizados.</p>
         <a href="/pedidos" class="btn btn-outline-success">Ir a pedidos</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bloque de Mi cuenta -->
+<div class="row">
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Mi cuenta</h5>
+        <p class="card-text">Consulta tu ficha personal o cambia tu contraseña y foto.</p>
+        <a href="/perfil" class="btn btn-outline-secondary me-2">Ver mi ficha</a>
+        <a href="/perfil/editar" class="btn btn-outline-dark">Cambiar contraseña y foto</a>
       </div>
     </div>
   </div>

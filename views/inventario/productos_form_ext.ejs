@@ -1,0 +1,187 @@
+<%- include('../partials/header', { title }) %>
+
+<section class="container py-4">
+  <h2 class="h4 mb-3"><%= title %></h2>
+
+  <form method="post" action="">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Nombre</label>
+        <input name="nombre" class="form-control" required value="<%= producto?.nombre || '' %>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Clase</label>
+        <select name="clase" class="form-select">
+          <option value="PRODUCTO" <%= (producto?.clase||'PRODUCTO')==='PRODUCTO'?'selected':'' %>>PRODUCTO</option>
+          <option value="INSUMO" <%= (producto?.clase||'PRODUCTO')==='INSUMO'?'selected':'' %>>INSUMO</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Descripción</label>
+        <textarea name="descripcion" class="form-control" rows="2"><%= producto?.descripcion || '' %></textarea>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Proveedores + Precios -->
+    <div class="mb-3">
+      <label class="form-label">Proveedores</label>
+      <select id="selProveedores" class="form-select" multiple>
+        <% (proveedores||[]).forEach(p=>{ %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+      <div class="form-text">Selecciona uno o varios proveedores y edita los precios abajo.</div>
+    </div>
+
+    <div class="table-responsive mb-4">
+      <table class="table table-sm align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:35%">Proveedor</th>
+            <th style="width:20%">Precio compra</th>
+            <th style="width:20%">Precio venta (opcional)</th>
+            <th style="width:10%"></th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPrecios"></tbody>
+      </table>
+    </div>
+
+    <!-- Bodegas + Stock -->
+    <div class="mb-3">
+      <label class="form-label">Bodegas</label>
+      <select id="selBodegas" class="form-select" multiple>
+        <% (bodegas||[]).forEach(b=>{ %>
+          <option value="<%= b.id %>"><%= b.nombre %></option>
+        <% }) %>
+      </select>
+      <div class="form-text">Selecciona una o varias bodegas y define el stock por cada una.</div>
+    </div>
+
+    <div class="table-responsive mb-4">
+      <table class="table table-sm align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th style="width:50%">Bodega</th>
+            <th style="width:25%">Stock</th>
+            <th style="width:10%"></th>
+          </tr>
+        </thead>
+        <tbody id="tbodyStocks"></tbody>
+      </table>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="/inventario/productos" class="btn btn-secondary">Cancelar</a>
+      <button class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</section>
+
+<script>
+  const proveedores = <%- JSON.stringify(proveedores||[]) %>;
+  const bodegas     = <%- JSON.stringify(bodegas||[]) %>;
+  // Precarga (editar)
+  const preciosInit = <%- JSON.stringify(precios||[]) %>;
+  const stocksInit  = <%- JSON.stringify(stocks||[]) %>;
+
+  const tbodyPrecios = document.getElementById('tbodyPrecios');
+  const tbodyStocks  = document.getElementById('tbodyStocks');
+  const selProv      = document.getElementById('selProveedores');
+  const selBod       = document.getElementById('selBodegas');
+
+  // Mapas para evitar duplicados
+  const filasPrecio = new Map(); // key: supplier_id
+  const filasStock  = new Map(); // key: warehouse_id
+
+  function addFilaPrecio(supplier_id, pc='', pv='') {
+    if (filasPrecio.has(supplier_id)) return;
+    const prov = proveedores.find(p => p.id == supplier_id);
+    if (!prov) return;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${prov.nombre}
+        <input type="hidden" name="precios[][supplier_id]" value="${supplier_id}">
+      </td>
+      <td>
+        <input name="precios[][precio_compra]" type="number" min="0" step="0.01" class="form-control" value="${pc}">
+      </td>
+      <td>
+        <input name="precios[][precio_venta]" type="number" min="0" step="0.01" class="form-control" value="${pv==null?'':pv}">
+      </td>
+      <td><button type="button" class="btn btn-sm btn-outline-danger btn-del-p">X</button></td>
+    `;
+    tr.querySelector('.btn-del-p').addEventListener('click', () => {
+      filasPrecio.delete(supplier_id);
+      tr.remove();
+      // deseleccionar en el multiselect
+      [...selProv.options].find(o=>o.value==supplier_id)?.toggleAttribute('selected', false);
+    });
+
+    filasPrecio.set(supplier_id, tr);
+    tbodyPrecios.appendChild(tr);
+  }
+
+  function addFilaStock(warehouse_id, cantidad='') {
+    if (filasStock.has(warehouse_id)) return;
+    const b = bodegas.find(x => x.id == warehouse_id);
+    if (!b) return;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.nombre}
+        <input type="hidden" name="stocks[][warehouse_id]" value="${warehouse_id}">
+      </td>
+      <td>
+        <input name="stocks[][cantidad]" type="number" min="0" step="0.01" class="form-control" value="${cantidad}">
+      </td>
+      <td><button type="button" class="btn btn-sm btn-outline-danger btn-del-s">X</button></td>
+    `;
+    tr.querySelector('.btn-del-s').addEventListener('click', () => {
+      filasStock.delete(warehouse_id);
+      tr.remove();
+      [...selBod.options].find(o=>o.value==warehouse_id)?.toggleAttribute('selected', false);
+    });
+
+    filasStock.set(warehouse_id, tr);
+    tbodyStocks.appendChild(tr);
+  }
+
+  // Cambios en selects múltiples
+  selProv.addEventListener('change', () => {
+    [...selProv.selectedOptions].forEach(o => addFilaPrecio(o.value));
+    // eliminar filas que ya no están seleccionadas
+    [...filasPrecio.keys()].forEach(id => {
+      if (![...selProv.selectedOptions].some(o=>o.value==id)) {
+        filasPrecio.get(id)?.remove(); filasPrecio.delete(id);
+      }
+    });
+  });
+
+  selBod.addEventListener('change', () => {
+    [...selBod.selectedOptions].forEach(o => addFilaStock(o.value));
+    [...filasStock.keys()].forEach(id => {
+      if (![...selBod.selectedOptions].some(o=>o.value==id)) {
+        filasStock.get(id)?.remove(); filasStock.delete(id);
+      }
+    });
+  });
+
+  // Precargar (modo editar)
+  preciosInit.forEach(p => {
+    addFilaPrecio(p.supplier_id, p.precio_compra, p.precio_venta);
+    // marca el option
+    const opt = [...selProv.options].find(o=>o.value==p.supplier_id);
+    if (opt) opt.selected = true;
+  });
+  stocksInit.forEach(s => {
+    addFilaStock(s.warehouse_id, s.cantidad);
+    const opt = [...selBod.options].find(o=>o.value==s.warehouse_id);
+    if (opt) opt.selected = true;
+  });
+</script>
+
+<%- include('../partials/footer') %>

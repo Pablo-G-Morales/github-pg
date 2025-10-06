@@ -1,0 +1,87 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= title %></h2>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <p><strong>Compra:</strong> #<%= compra.id %></p>
+      <p><strong>Proveedor:</strong> <%= compra.proveedor_nombre %></p>
+      <p><strong>Bodega:</strong> <%= compra.bodega_nombre %></p>
+    </div>
+  </div>
+
+  <form method="POST" action="/compras-v4/devoluciones/<%= compra.id %>">
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Cant. Comprada</th>
+            <th>Ya Devuelto</th>
+            <th>Saldo Devolución</th>
+            <th>Devolver</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (items||[]).forEach((it, i) => { 
+               const cantCompr = Number(it.cantidad_comprada || 0);
+               const dev       = Number(it.devuelto || 0);
+               const saldo     = Number(it.saldo_devolucion || 0);
+               const maxInt    = Math.floor(saldo);
+          %>
+            <tr>
+              <td><%= i + 1 %></td>
+              <td><%= it.producto_nombre %></td>
+              <td><%= cantCompr.toFixed(0) %></td>
+              <td><%= dev.toFixed(0) %></td>
+              <td><%= saldo.toFixed(0) %></td>
+              <td>
+                <input
+                  type="number"
+                  name="items[<%= i %>][cantidad]"
+                  class="form-control form-control-sm text-end"
+                  min="0"
+                  max="<%= maxInt %>"
+                  step="1"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="0"
+                >
+                <input type="hidden" name="items[<%= i %>][producto_id]" value="<%= it.producto_id %>">
+              </td>
+              <td>
+                <input type="text" name="items[<%= i %>][motivo]" class="form-control form-control-sm" placeholder="Opcional">
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Notas generales (opcional)</label>
+      <textarea name="notas" class="form-control" rows="2"></textarea>
+    </div>
+
+    <div class="text-end">
+      <a href="/compras-v4/autorizar" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-success">
+        <i class="fa fa-save"></i> Registrar devolución
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Bloquea el ingreso de '.' o ',' en los inputs de cantidad
+  document.addEventListener('input', function(e){
+    if (e.target && e.target.name && e.target.name.includes('[cantidad]')) {
+      e.target.value = e.target.value.replace(/[^\d]/g,'');
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

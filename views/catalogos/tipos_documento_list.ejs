@@ -1,0 +1,68 @@
+<%- include('../partials/header', { title }) %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Tipos de documento</h2>
+    <div class="d-flex gap-2">
+      <a href="/compras1" class="btn btn-outline-secondary">
+        <i class="fa fa-arrow-left"></i> Menú compras
+      </a>
+      <a href="/catalogos/tipos-documento/nuevo" class="btn btn-success">
+        <i class="fa fa-plus"></i> Nuevo tipo
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table id="tblTiposDocumento" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (items || []).forEach(it => { %>
+          <tr>
+            <td><%= it.id %></td>
+            <td><%= it.nombre %></td>
+            <td><%= it.descripcion || '—' %></td>
+            <td class="text-nowrap">
+              <a href="/catalogos/tipos-documento/<%= it.id %>/editar" class="btn btn-sm btn-primary">
+                <i class="fa fa-pen"></i> Editar
+              </a>
+              <!-- intencionalmente sin botón Eliminar -->
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    $('#tblTiposDocumento').DataTable({
+      order: [[0, 'desc']], // orden inicial por ID desc
+      pageLength: 10,
+      language:{
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "_START_–_END_ de _TOTAL_",
+        infoEmpty: "0–0 de 0",
+        emptyTable: "Sin resultados",
+        paginate:{ previous:"Anterior", next:"Siguiente" }
+      },
+      columnDefs: [
+        { targets: 0, width: 80 },           // ID
+        { targets: 3, orderable: false }     // Acciones sin orden
+      ]
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

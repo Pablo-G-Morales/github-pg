@@ -1,0 +1,118 @@
+<!-- Modal Catálogo (simple) -->
+<div class="modal fade" id="modalCatalogo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Catálogo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="catWarn" class="alert alert-warning d-none mb-3"></div>
+
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Buscar</label>
+            <input id="catSearch" class="form-control" placeholder="Nombre...">
+          </div>
+          <div class="col-md-6 text-end">
+            <div class="small text-muted">Fuente: precio y stock desde Inventario</div>
+          </div>
+        </div>
+
+        <ul class="nav nav-pills mb-3" id="catTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="catTabProductos" data-bs-toggle="pill" data-bs-target="#catPane" type="button" role="tab">Productos</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="catTabInsumos" data-bs-toggle="pill" data-bs-target="#catPane" type="button" role="tab">Insumos</button>
+          </li>
+        </ul>
+
+        <div id="catGrid" class="row g-3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const grid  = document.getElementById('catGrid');
+  const warn  = document.getElementById('catWarn');
+
+  const getProv = () => Number(document.getElementById('proveedor_id')?.value || 0) || null;
+  const getBod  = () => Number(document.getElementById('bodega_id')?.value || 0) || null;
+
+  const currentClase = () =>
+    document.getElementById('catTabInsumos').classList.contains('active') ? 'INSUMO' : 'PRODUCTO';
+
+  function showWarn(msg) {
+    warn.textContent = msg;
+    warn.classList.remove('d-none');
+  }
+  function hideWarn() { warn.classList.add('d-none'); warn.textContent=''; }
+
+  async function load(clase) {
+    const proveedor_id = getProv();
+    const bodega_id    = getBod();
+    const q            = document.getElementById('catSearch').value.trim();
+
+    // Proveedor es requerido para mostrar productos
+    if (!proveedor_id) {
+      grid.innerHTML = '';
+      showWarn('Selecciona un proveedor en la pantalla principal para ver su catálogo.');
+      return;
+    }
+    hideWarn();
+
+    const params = new URLSearchParams();
+    params.set('clase', clase);
+    params.set('proveedor_id', proveedor_id);
+    if (bodega_id) params.set('bodega_id', bodega_id);
+    if (q) params.set('search', q);
+
+    const r = await fetch('/compras-v2/api/items?' + params.toString());
+    const data = await r.json();
+
+    grid.innerHTML = (data.items||[]).map(it => `
+      <div class="col-md-4">
+        <div class="card h-100 card-hover" role="button"
+             data-id="${it.item_id}" data-nombre="${it.nombre}"
+             data-clase="${it.clase}" data-precio="${it.precio!=null?Number(it.precio):0}">
+          <img src="${it.imagen || '/img/products/no-image.png'}"
+               class="card-img-top" style="aspect-ratio:3/2;object-fit:cover;">
+          <div class="card-body">
+            <h6 class="card-title mb-1">${it.nombre}</h6>
+            <div class="text-muted small">Precio: ${it.precio!=null?('Q '+Number(it.precio).toFixed(2)):'—'}</div>
+            <div class="text-muted small">Stock: ${it.stock!=null?it.stock:0}</div>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<div class="text-center text-muted py-4">Sin resultados</div>';
+  }
+
+  // Click en tarjetas -> agrega 1 unidad y cierra modal (lo cierra el padre)
+  grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.card[data-id]');
+    if (!card) return;
+    const detalle = {
+      item_id        : Number(card.dataset.id),
+      nombre         : card.dataset.nombre,
+      clase          : card.dataset.clase || 'PRODUCTO',
+      cantidad       : 1,
+      precio_unitario: Number(card.dataset.precio || 0)
+    };
+    document.dispatchEvent(new CustomEvent('cat:addItem', { detail: detalle }));
+  });
+
+  // Cambiar pestañas / buscar -> recarga
+  document.getElementById('catTabProductos').addEventListener('shown.bs.tab', () => load('PRODUCTO'));
+  document.getElementById('catTabInsumos').addEventListener('shown.bs.tab',   () => load('INSUMO'));
+  document.getElementById('catSearch').addEventListener('input', () => load(currentClase()));
+
+  // Al mostrar el modal: activa Productos y carga
+  document.getElementById('modalCatalogo').addEventListener('show.bs.modal', () => {
+    document.getElementById('catTabProductos').click();
+  });
+})();
+</script>

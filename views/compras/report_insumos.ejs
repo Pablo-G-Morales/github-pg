@@ -1,0 +1,35 @@
+<%- include('../partials/header') %>
+
+<section class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h4 mb-0">Reporte de Insumos (compras)</h2>
+    <a href="/compras" class="btn btn-outline-secondary btn-sm"><i class="fa fa-arrow-left"></i> Volver</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Insumo</th>
+          <th class="text-end">Cantidad total</th>
+          <th class="text-end">Total Q</th>
+        </tr>
+      </thead>
+      <tbody>
+      <% if (rows && rows.length){ rows.forEach((r,idx)=>{ %>
+        <tr>
+          <td><%= idx+1 %></td>
+          <td><%= r.nombre %></td>
+          <td class="text-end"><%= Number(r.total_cantidad||0) %></td>
+          <td class="text-end"><%= Number(r.total_q||0).toFixed(2) %></td>
+        </tr>
+      <% }) } else { %>
+        <tr><td colspan="4" class="text-center text-muted py-4">Sin datos para mostrar.</td></tr>
+      <% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

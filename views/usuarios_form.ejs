@@ -5,7 +5,7 @@
 
 <h2 class="mb-4"><%= data ? '✏️ Editar usuario' : '➕ Nuevo usuario' %></h2>
 
-<form class="row g-3" method="POST" enctype="multipart/form-data">
+<form class="row g-3" method="POST" enctype="multipart/form-data" autocomplete="on">
   <div class="col-md-6">
     <label class="form-label">Nombre</label>
     <input class="form-control" name="nombre" required value="<%= data?.nombre || '' %>">
@@ -18,14 +18,24 @@
 
   <div class="col-md-6">
     <label class="form-label">Usuario</label>
-    <input class="form-control" name="usuario" required value="<%= data?.usuario || '' %>">
+    <input class="form-control" name="usuario" required value="<%= data?.usuario || '' %>" autocomplete="username">
   </div>
 
   <div class="col-md-6">
     <label class="form-label">Contraseña
       <small class="text-muted">(dejar vacío si no deseas cambiarla)</small>
     </label>
-    <input type="password" class="form-control" name="password">
+    <div class="input-group">
+      <input
+        type="password"
+        id="password"
+        class="form-control"
+        name="password"
+        autocomplete="new-password">
+      <button class="btn btn-outline-secondary" type="button" id="togglePwd" title="Mostrar/Ocultar contraseña">
+        <span id="pwdIcon" aria-hidden="true">👁️</span>
+      </button>
+    </div>
   </div>
 
   <div class="col-md-6">
@@ -77,5 +87,23 @@
     <a href="/usuarios" class="btn btn-secondary ms-2">Cancelar</a>
   </div>
 </form>
+
+<script>
+  // Mostrar / ocultar contraseña
+  (function(){
+    const pwd = document.getElementById('password');
+    const btn = document.getElementById('togglePwd');
+    const icon = document.getElementById('pwdIcon');
+
+    if (pwd && btn) {
+      btn.addEventListener('click', () => {
+        const toShow = pwd.type === 'password';
+        pwd.type = toShow ? 'text' : 'password';
+        icon.textContent = toShow ? '🙈' : '👁️';
+        btn.setAttribute('aria-pressed', String(toShow));
+      });
+    }
+  })();
+</script>
 
 <%- include('partials/footer'); %>

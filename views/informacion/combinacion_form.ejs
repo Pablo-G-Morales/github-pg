@@ -1,0 +1,61 @@
+<%- include('../partials/header') %>
+
+<div class="container py-4" style="max-width:840px">
+  <h2 class="h4 mb-3"><%= title %></h2>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <form method="post" action="<%= registro ? ('/informacion/' + registro.id + '/editar') : '/informacion/nueva' %>">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Nombre del producto <span class="text-danger">*</span></label>
+            <input type="text" name="producto_nombre" class="form-control" required
+                   value="<%= registro?.producto_nombre || '' %>" placeholder="Ej. Taza 12onz">
+            <div class="form-text">
+              Este nombre se usa solo en el módulo de Información. (Opcional) Puedes vincularlo con tu inventario abajo.
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Vincular con inventario (opcional)</label>
+            <select name="product_id" class="form-select">
+              <option value="">— Sin vínculo —</option>
+              <% (productos || []).forEach(p => { %>
+                <option value="<%= p.id %>" <%= (registro?.product_id == p.id ? 'selected' : '') %>><%= p.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Temperatura (°C)</label>
+            <input type="number" name="temperatura" min="0" class="form-control"
+                   value="<%= registro?.temperatura ?? '' %>" placeholder="Ej. 220">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tiempo (s)</label>
+            <input type="number" name="tiempo" min="0" class="form-control"
+                   value="<%= registro?.tiempo ?? '' %>" placeholder="Ej. 180">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Plancha <span class="text-danger">*</span></label>
+            <select name="plancha_id" class="form-select" required>
+              <option value="">-- Selecciona --</option>
+              <% (planchas || []).forEach(p => { %>
+                <option value="<%= p.id %>" <%= (registro?.plancha_id == p.id ? 'selected' : '') %>><%= p.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <a href="/informacion" class="btn btn-outline-secondary">Cancelar</a>
+          <button class="btn btn-primary" type="submit">
+            <i class="fa fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

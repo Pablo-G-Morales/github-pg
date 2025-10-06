@@ -1,0 +1,289 @@
+<%- include('../partials/header', { title }) %>
+
+<section class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h4 m-0">Nueva compra (Estilo tienda)</h2>
+
+    <div class="d-flex gap-2">
+      <button id="btnCart" type="button" class="btn btn-outline-primary position-relative" data-bs-toggle="modal" data-bs-target="#cartModal">
+        <i class="fa fa-shopping-cart me-1"></i> Carrito
+        <span id="cartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+      </button>
+      <a href="/compras-v4" class="btn btn-secondary">Reiniciar</a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="row g-3 mb-3">
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Proveedor</label>
+      <select id="proveedor" class="form-select" required>
+        <option value="">Seleccione…</option>
+        <% (proveedores||[]).forEach(p=>{ %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+      <div class="form-text">Usado para el precio por proveedor.</div>
+    </div>
+
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Bodega</label>
+      <select id="bodega" class="form-select" required>
+        <option value="">Seleccione…</option>
+        <% (bodegas||[]).forEach(b=>{ %>
+          <option value="<%= b.id %>"><%= b.nombre %></option>
+        <% }) %>
+      </select>
+      <div class="form-text">Afecta el stock mostrado y donde se ingresará.</div>
+    </div>
+
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Fecha/hora</label>
+      <input id="fecha" type="datetime-local" class="form-control" value="<%= new Date().toISOString().slice(0,16) %>">
+    </div>
+
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label">Notas</label>
+      <input id="notas" class="form-control" placeholder="Opcional">
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="input-group mb-3">
+    <span class="input-group-text"><i class="fa fa-search"></i></span>
+    <input id="search" class="form-control" placeholder="Buscar por nombre…">
+    <button id="btnBuscar" class="btn btn-outline-primary" type="button">Buscar</button>
+  </div>
+
+  <!-- Grid de productos -->
+  <div id="grid" class="row g-3"></div>
+
+  <!-- Modal Carrito -->
+  <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fa fa-shopping-cart me-2"></i>Carrito</h5>
+          <button class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm align-middle m-0">
+              <thead class="table-dark">
+                <tr>
+                  <th>Producto</th>
+                  <th style="width:120px" class="text-end">Precio</th>
+                  <th style="width:160px" class="text-center">Cantidad</th>
+                  <th style="width:120px" class="text-end">Subtotal</th>
+                  <th style="width:50px"></th>
+                </tr>
+              </thead>
+              <tbody id="cartBody"></tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3" class="text-end">Total</th>
+                  <th class="text-end">Q <span id="cartTotal">0.00</span></th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <!-- Guardará en estado PENDIENTE; la aprobación suma stock -->
+          <button id="btnGuardar" class="btn btn-primary">
+            <i class="fa fa-save me-1"></i> Guardar compra (PENDIENTE)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // --- Elementos ---
+  const grid       = document.getElementById('grid');
+  const proveedor  = document.getElementById('proveedor');
+  const bodega     = document.getElementById('bodega');
+  const fecha      = document.getElementById('fecha');
+  const notas      = document.getElementById('notas');
+  const search     = document.getElementById('search');
+  const btnBuscar  = document.getElementById('btnBuscar');
+
+  const cartBadge  = document.getElementById('cartBadge');
+  const cartBody   = document.getElementById('cartBody');
+  const cartTotal  = document.getElementById('cartTotal');
+  const btnGuardar = document.getElementById('btnGuardar');
+
+  // --- Estado ---
+  let catalog = []; // [{id, nombre, imagen, precio, stock}]
+  let cart    = []; // [{item_id, nombre, precio_unitario, cantidad}]
+
+  // --- Utilidades ---
+  function fmt(n){ return (Number(n||0)).toFixed(2); }
+  function qSel(id){ return document.getElementById(id); }
+  function badge(){ cartBadge.textContent = cart.reduce((a,c)=>a + Number(c.cantidad||0), 0); }
+
+  // Mensaje simple
+  function toast(msg){ alert(msg); }
+
+  // --- Render catálogo ---
+  function renderCatalog(items){
+    if (!proveedor.value || !bodega.value) {
+      grid.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-info mb-0">
+            Selecciona <strong>Proveedor</strong> y <strong>Bodega</strong> para cargar el catálogo.
+          </div>
+        </div>`;
+      return;
+    }
+
+    if (!items.length) {
+      grid.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-warning mb-0">No se encontraron productos.</div>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = items.map(p => `
+      <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+        <div class="card h-100 shadow-sm">
+          <img src="${p.imagen || '/img/products/noimg.png'}"
+               onerror="this.src='/img/products/noimg.png';"
+               class="card-img-top"
+               style="aspect-ratio:1/1; object-fit:cover;">
+          <div class="card-body p-2 d-flex flex-column">
+            <div class="small text-muted mb-1">Stock: ${fmt(p.stock)}</div>
+            <h6 class="card-title mb-1" title="${p.nombre}" style="min-height:2.5em">${p.nombre}</h6>
+            <div class="fw-bold mb-2">${p.precio!=null ? 'Q '+fmt(p.precio) : '<span class="text-danger">Sin precio</span>'}</div>
+            <div class="input-group input-group-sm mt-auto">
+              <input type="number" min="1" step="1" value="1" class="form-control" id="qty_${p.id}">
+              <button class="btn btn-primary" onclick="addToCart(${p.id})" ${p.precio==null?'disabled':''}>
+                <i class="fa fa-cart-plus">+</i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // --- Cargar catálogo ---
+  async function loadCatalog(){
+    const prov = proveedor.value || '';
+    const bod  = bodega.value || '';
+    const q    = search.value || '';
+
+    if (!prov || !bod) { renderCatalog([]); return; }
+
+    const url  = `/compras-v4/api/catalog?proveedor_id=${encodeURIComponent(prov)}&bodega_id=${encodeURIComponent(bod)}&search=${encodeURIComponent(q)}`;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(await r.text());
+      const js = await r.json();
+      catalog = js.items || [];
+      renderCatalog(catalog);
+    } catch (err) {
+      console.error(err);
+      grid.innerHTML = `<div class="col-12"><div class="alert alert-danger mb-0">No se pudo cargar el catálogo.</div></div>`;
+    }
+  }
+
+  // --- Carrito ---
+  function addToCart(id){
+    const p = catalog.find(x => x.id === id);
+    if (!p) return;
+    if (p.precio == null) return toast('Este proveedor no tiene precio asignado para el producto.');
+    const qty = Number(qSel('qty_'+id).value || 1);
+    if (!qty || qty < 1) return;
+
+    const found = cart.find(x => x.item_id === id);
+    if (found) found.cantidad += qty;
+    else cart.push({ item_id: id, nombre: p.nombre, precio_unitario: Number(p.precio), cantidad: qty });
+
+    paintCart();
+  }
+
+  function paintCart(){
+    badge();
+    cartBody.innerHTML = cart.map((c,i)=>`
+      <tr>
+        <td>${c.nombre}</td>
+        <td class="text-end">Q ${fmt(c.precio_unitario)}</td>
+        <td class="text-center">
+          <div class="input-group input-group-sm" style="max-width:160px;margin:auto">
+            <button class="btn btn-outline-secondary" onclick="chgQty(${i},-1)">-</button>
+            <input class="form-control text-center" value="${c.cantidad}" onchange="setQty(${i}, this.value)">
+            <button class="btn btn-outline-secondary" onclick="chgQty(${i},+1)">+</button>
+          </div>
+        </td>
+        <td class="text-end">Q ${fmt(c.cantidad*c.precio_unitario)}</td>
+        <td><button class="btn btn-sm btn-outline-danger" onclick="delItem(${i})"><i class="fa fa-trash"></i></button></td>
+      </tr>
+    `).join('');
+    cartTotal.textContent = fmt(cart.reduce((a,c)=>a + c.cantidad*c.precio_unitario, 0));
+  }
+
+  function chgQty(i,d){ cart[i].cantidad = Math.max(1, Number(cart[i].cantidad||1) + d); paintCart(); }
+  function setQty(i,v){ const n = Number(v||1); cart[i].cantidad = n>0?n:1; paintCart(); }
+  function delItem(i){ cart.splice(i,1); paintCart(); }
+
+  // --- Guardar (PENDIENTE) ---
+  btnGuardar.addEventListener('click', async ()=>{
+    if (!proveedor.value) return toast('Seleccione proveedor');
+    if (!bodega.value)    return toast('Seleccione bodega');
+    if (!cart.length)     return toast('Agregue productos al carrito');
+
+    const payload = {
+      proveedor_id: proveedor.value,
+      bodega_id:    bodega.value,
+      fecha_compra: fecha.value,
+      notas:        notas.value,
+      items: cart.map(c => ({
+        item_id: c.item_id,
+        clase: 'PRODUCTO',
+        cantidad: c.cantidad,
+        precio_unitario: c.precio_unitario
+      }))
+    };
+
+    try {
+      btnGuardar.disabled = true;
+      const r = await fetch('/compras-v4', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const js = await r.json();
+      alert('Compra guardada');
+      location.href = js.redirect || ('/compras-v4/' + js.id);
+    } catch (err) {
+      console.error(err);
+      toast('Error al guardar la compra.');
+    } finally {
+      btnGuardar.disabled = false;
+    }
+  });
+
+  // --- Eventos ---
+  proveedor.addEventListener('change', loadCatalog);
+  bodega.addEventListener('change', loadCatalog);
+  btnBuscar.addEventListener('click', loadCatalog);
+  search.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); loadCatalog(); }});
+
+  // Carga inicial (si ya hay proveedor/bodega seleccionados)
+  loadCatalog();
+
+  // Exponer funciones usadas en HTML
+  window.addToCart = addToCart;
+  window.chgQty    = chgQty;
+  window.setQty    = setQty;
+  window.delItem   = delItem;
+</script>
+
+<%- include('../partials/footer') %>

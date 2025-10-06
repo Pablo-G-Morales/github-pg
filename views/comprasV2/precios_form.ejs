@@ -1,0 +1,55 @@
+<%- include('../partials/header') %>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4"><%= title %></h2>
+    <div>
+      <a class="btn btn-outline-secondary me-2" href="/compras-v2/precios">Ver precios</a>
+      <a class="btn btn-secondary" href="/compras">Volver a compras</a>
+    </div>
+  </div>
+
+  <form action="/compras-v2/precios" method="POST" class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Producto</label>
+      <select name="product_id" class="form-select select2" required>
+        <option value="">— Seleccionar —</option>
+        <% productos.forEach(p => { %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Proveedor</label>
+      <select name="supplier_id" class="form-select select2" required>
+        <option value="">— Seleccionar —</option>
+        <% proveedores.forEach(p => { %>
+          <option value="<%= p.id %>"><%= p.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Precio compra (Q)</label>
+      <input type="number" step="0.01" min="0" name="precio_compra" class="form-control" required>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Precio venta (Q) <span class="text-muted">(opcional)</span></label>
+      <input type="number" step="0.01" min="0" name="precio_venta" class="form-control">
+    </div>
+
+    <div class="col-12">
+      <button class="btn btn-success"><i class="fa fa-save"></i> Guardar precio</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>$('.select2').select2({ width: '100%' });</script>
+
+<%- include('../partials/footer') %>

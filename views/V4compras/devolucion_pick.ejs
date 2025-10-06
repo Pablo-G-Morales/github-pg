@@ -1,0 +1,64 @@
+<%- include('../partials/header', { title }) %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <a href="/compras-v4/devoluciones" class="btn btn-outline-secondary">
+      <i class="fa fa-arrow-left"></i> Volver a devoluciones
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table id="tblComprasComp" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Proveedor</th>
+          <th>Bodega</th>
+          <th>Fecha</th>
+          <th class="text-end">Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (compras||[]).forEach(c => { %>
+          <tr>
+            <td><%= c.id %></td>
+            <td><%= c.proveedor_nombre || '—' %></td>
+            <td><%= c.bodega_nombre   || '—' %></td>
+            <td><%= c.fecha_compra ? new Date(c.fecha_compra).toLocaleString() : '—' %></td>
+            <td class="text-end">Q <%= Number(c.total||0).toFixed(2) %></td>
+            <td class="text-nowrap">
+              <a href="/compras-v4/devoluciones/nueva/<%= c.id %>" class="btn btn-sm btn-success">
+                <i class="fa fa-reply"></i> Devolver
+              </a>
+              <a href="/compras-v2/<%= c.id %>" class="btn btn-sm btn-info">
+                <i class="fa fa-eye"></i> Ver compra
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    $('#tblComprasComp').DataTable({
+      order: [[0,'desc']],
+      language:{
+        search:"Buscar:",
+        lengthMenu:"Mostrar _MENU_ registros",
+        info:"_START_–_END_ de _TOTAL_",
+        infoEmpty:"0–0 de 0",
+        emptyTable:"Sin resultados",
+        paginate:{previous:"Anterior", next:"Siguiente"}
+      }
+    });
+  });
+</script>
+<%- include('../partials/footer') %>

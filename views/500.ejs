@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>500 - Error interno</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h1 class="display-5 mb-3">Ups, algo salió mal</h1>
+    <p class="lead mb-4">Se produjo un error inesperado.</p>
+
+    <% if (error) { %>
+      <div class="card">
+        <div class="card-header">Detalle técnico (solo desarrollo)</div>
+        <div class="card-body">
+          <pre class="mb-0"><%= (error.stack || error).toString() %></pre>
+        </div>
+      </div>
+    <% } %>
+
+    <a href="/" class="btn btn-primary mt-3">Volver al inicio</a>
+  </div>
+</body>
+</html>

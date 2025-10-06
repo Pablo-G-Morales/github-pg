@@ -1,62 +1,91 @@
 <%- include('../partials/header') %>
 
-<link rel="stylesheet"
-      href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
-
 <section class="container py-4">
-
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h4 mb-0">Compras de insumos</h2>
-    <a href="/compras/ordenes/nuevo" class="btn btn-success">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h4 mb-0">Compras</h2>
+    <a href="/compras/nueva" class="btn btn-primary">
       <i class="fa fa-plus"></i> Nueva compra
     </a>
   </div>
 
+  <form class="row g-2 mb-3" method="get" action="/compras">
+    <div class="col-12 col-md-3">
+      <label class="form-label mb-1">Año</label>
+      <input type="number" class="form-control" name="anio" value="<%= (query && query.anio) ? query.anio : '' %>" placeholder="2025">
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label mb-1">Mes</label>
+      <select class="form-select" name="mes">
+        <option value="">Todos</option>
+        <% for (let m=1; m<=12; m++) { %>
+          <option value="<%= m %>" <%= (Number((query && query.mes) || 0)===m ? 'selected' : '') %>><%= m %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="col-12 col-md-3">
+      <label class="form-label mb-1">Tipo</label>
+      <select class="form-select" name="tipo">
+        <option value="">Todos</option>
+        <option value="PRODUCTO" <%= (query && query.tipo==='PRODUCTO')?'selected':'' %>>Producto</option>
+        <option value="INSUMO"   <%= (query && query.tipo==='INSUMO')  ?'selected':'' %>>Insumo</option>
+      </select>
+    </div>
+    <div class="col-12 col-md-3 d-flex align-items-end">
+      <button class="btn btn-outline-secondary me-2" type="submit"><i class="fa fa-filter"></i> Filtrar</button>
+      <a class="btn btn-outline-dark" href="/compras"><i class="fa fa-rotate-left"></i> Limpiar</a>
+    </div>
+  </form>
+
   <div class="table-responsive">
-    <table id="tablaCompras"
-           class="table table-sm table-striped align-middle">
+    <table class="table table-sm table-striped align-middle">
       <thead class="table-dark">
         <tr>
           <th>#</th>
+          <th>Fecha</th>
           <th>Proveedor</th>
-          <th>Total (Q)</th>
-          <th>Registrada</th>
+          <th>Tipo</th>
+          <th>Bodega</th>
+          <th class="text-end">Total (Q)</th>
+          <th>Creado por</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <% compras.forEach(c=>{ %>
-          <tr>
-            <td><%= c.id %></td>
-            <td><%= c.proveedor %></td>
-            <td><%= (c.total_compra||0).toFixed(2) %></td>
-            <td><%= c.creado_en.toLocaleString() %></td>
-            <td>
-              <a href="/compras/ordenes/<%= c.id %>" class="btn btn-sm btn-primary">
-                <i class="fa fa-eye"></i>
-              </a>
-              <a href="/compras/ordenes/<%= c.id %>/pdf" class="btn btn-sm btn-secondary" target="_blank">
-                <i class="fa fa-file-pdf"></i>
-              </a>
-            </td>
-          </tr>
-        <% }) %>
+      <% if (compras && compras.length){ compras.forEach((c,idx)=>{ %>
+        <tr>
+          <td><%= c.id %></td>
+          <td><%= c.fecha_formateada %></td>
+          <td><%= c.proveedor_nombre %></td>
+          <td>
+            <span class="badge <%= c.tipo==='PRODUCTO'?'text-bg-success':'text-bg-info' %>">
+              <%= c.tipo %>
+            </span>
+          </td>
+          <td><%= c.bodega_nombre || '-' %></td>
+          <td class="text-end"><%= Number(c.total||0).toFixed(2) %></td>
+          <td><%= c.creador_nombre %></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="/compras/<%= c.id %>" class="btn btn-outline-primary"><i class="fa fa-eye"></i></a>
+              <a href="/compras/<%= c.id %>/editar" class="btn btn-outline-secondary"><i class="fa fa-pen"></i></a>
+            </div>
+          </td>
+        </tr>
+      <% }) } else { %>
+        <tr><td colspan="8" class="text-center text-muted py-4">No hay compras registradas.</td></tr>
+      <% } %>
       </tbody>
     </table>
   </div>
-</section>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
-<script>
-  $(function () {
-    $('#tablaCompras').DataTable({
-      order: [[0,'desc']],
-      pageLength: 10,
-      language: { url:'//cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json' }
-    });
-  });
-</script>
+  <div class="mt-4 d-flex gap-2">
+    <a class="btn btn-outline-dark" href="/compras/reportes/insumos">
+      <i class="fa fa-chart-column"></i> Reporte de insumos
+    </a>
+    <a class="btn btn-outline-dark" href="/compras/reportes/insumos/usuarios">
+      <i class="fa fa-user-chart"></i> Quién compra más insumos
+    </a>
+  </div>
+</section>
 
 <%- include('../partials/footer') %>

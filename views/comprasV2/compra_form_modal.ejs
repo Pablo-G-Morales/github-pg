@@ -1,0 +1,320 @@
+<%- include('../partials/header') %>
+
+<style>
+  .thumb { width:64px; height:64px; overflow:hidden; border-radius:.5rem; flex:0 0 64px; }
+  .thumb > img { width:100%; height:100%; object-fit:cover; transition: transform .15s ease; }
+  .thumb:hover > img { transform: scale(1.9); }
+  .pill { font-size:.75rem; }
+  .catalogo-item:hover { background: rgba(0,0,0,.03); }
+</style>
+
+<div class="container py-3">
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h4"><%= compra ? ('Editar compra #' + compra.id) : 'Nueva compra' %></h2>
+    <div>
+      <a href="/compras-v2" class="btn btn-outline-secondary me-2">Volver</a>
+      <button id="btnGuardar" class="btn btn-primary">Guardar</button>
+    </div>
+  </div>
+
+  <!-- Cabecera -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Fecha/hora</label>
+      <input id="fecha_compra" type="datetime-local" class="form-control"
+             value="<%= compra ? compra.fecha_compra_local : '' %>">
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Proveedor</label>
+      <select id="proveedor_id" class="form-select">
+        <option value="">— Seleccionar —</option>
+        <% proveedores.forEach(p => { %>
+          <option value="<%= p.id %>" <%= compra && compra.proveedor_id==p.id ? 'selected':'' %>><%= p.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Bodega (solo PRODUCTO)</label>
+      <select id="bodega_id" class="form-select">
+        <option value="">— Seleccionar —</option>
+        <% bodegas.forEach(b => { %>
+          <option value="<%= b.id %>" <%= compra && compra.bodega_id==b.id ? 'selected':'' %>><%= b.nombre %></option>
+        <% }) %>
+      </select>
+      <div class="form-text">La bodega solo cambia el stock mostrado.</div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Notas</label>
+      <input id="notas" class="form-control" placeholder="Opcional" value="<%= (compra && compra.notas) ? compra.notas : '' %>">
+    </div>
+  </div>
+
+  <!-- Catálogo embebido -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+        <div class="btn-group" role="group" aria-label="Clase">
+          <button class="btn btn-sm btn-primary"  id="tabProductos" type="button">Productos</button>
+          <button class="btn btn-sm btn-outline-primary" id="tabInsumos" type="button">Insumos</button>
+        </div>
+        <div class="ms-auto" style="min-width:280px;">
+          <input id="search" class="form-control" placeholder="Buscar por nombre…">
+        </div>
+      </div>
+
+      <div id="warn" class="alert alert-warning d-none">
+        Elige un proveedor para ver el <b>precio de compra</b>. Sin proveedor, el precio se mostrará como “—”.
+      </div>
+
+      <div id="catLoading" class="text-muted d-none">Cargando…</div>
+      <div id="catError" class="alert alert-danger d-none"></div>
+      <div id="catalogo" class="vstack gap-2"></div>
+    </div>
+  </div>
+
+  <!-- Orden / Detalle -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table align-middle" id="tblOrden">
+          <thead>
+            <tr>
+              <th>Clase</th>
+              <th>Imagen</th>
+              <th>Ítem</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <th colspan="5" class="text-end">Total</th>
+              <th class="text-end" id="ordenTotal">Q 0.00</th>
+              <th></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $  = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  const state = {
+    clase: 'PRODUCTO',
+    proveedor_id    : <%= compra ? (compra.proveedor_id || 'null') : 'null' %>,
+    bodega_id       : <%= compra ? (compra.bodega_id    || 'null') : 'null' %>,
+    items           : <%- JSON.stringify(detalles && detalles.length ? detalles.map(d => ({
+                          item_id        : Number(d.item_id || d.producto_id || d.insumo_id),
+                          clase          : d.clase || (d.producto_id ? 'PRODUCTO' : 'INSUMO'),
+                          cantidad       : Number(d.cantidad),
+                          precio_unitario: Number(d.precio_unitario),
+                          nombre         : d.nombre || d.producto_nombre || d.insumo_nombre || '',
+                          imagen         : d.imagen || ''
+                        })) : []) %>
+  };
+
+  // ---------- helpers ----------
+  const fmt = n => 'Q ' + Number(n||0).toFixed(2);
+  const API = '/compras-v2/api/items';
+
+  function renderWarn() {
+    $('#warn').classList.toggle('d-none', !!state.proveedor_id || state.clase==='INSUMO');
+  }
+
+  function renderCatalogo(items) {
+    const cont = $('#catalogo');
+    cont.innerHTML = items.map(it => `
+      <div class="catalogo-item d-flex align-items-center gap-3 border rounded p-2">
+        <div class="thumb"><img src="${it.imagen || '/img/products/no-image.png'}" alt=""></div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${it.nombre}</div>
+          <div class="mt-1 d-flex flex-wrap gap-2">
+            <span class="badge text-bg-secondary pill">Clase: ${it.clase}</span>
+            <span class="badge text-bg-info pill">Compra: ${it.precio!=null?fmt(it.precio):'—'}</span>
+            <span class="badge text-bg-dark pill">Stock: ${it.stock!=null?it.stock:0}</span>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-primary add"
+                  data-id="${it.item_id}"
+                  data-nombre="${it.nombre.replace(/"/g,'&quot;')}"
+                  data-clase="${it.clase}"
+                  data-precio="${it.precio!=null ? Number(it.precio) : 0}"
+                  data-imagen="${(it.imagen||'').replace(/"/g,'&quot;')}">
+            Agregar
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    if (!items.length) {
+      cont.innerHTML = '<div class="text-muted text-center py-4">Sin resultados</div>';
+    }
+  }
+
+  function renderOrden() {
+    const tbody = $('#tblOrden tbody'); tbody.innerHTML = '';
+    let total = 0;
+    state.items.forEach((it, i) => {
+      const sub = Number(it.cantidad||0) * Number(it.precio_unitario||0);
+      total += sub;
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td><span class="badge ${it.clase==='PRODUCTO'?'text-bg-success':'text-bg-secondary'}">${it.clase}</span></td>
+          <td><div class="thumb"><img src="${it.imagen || '/img/products/no-image.png'}" alt=""></div></td>
+          <td>${it.nombre || ('#'+it.item_id)}</td>
+          <td class="text-end">
+            <input class="form-control form-control-sm text-end qty" data-idx="${i}"
+                   type="number" step="0.01" min="0" value="${it.cantidad}">
+          </td>
+          <td class="text-end">${fmt(it.precio_unitario)}</td>
+          <td class="text-end">${fmt(sub)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-link text-danger del" data-idx="${i}" title="Quitar">✕</button>
+          </td>
+        </tr>
+      `);
+    });
+    $('#ordenTotal').textContent = fmt(total);
+  }
+
+  function addOrMerge(it) {
+    const k = state.items.findIndex(x => x.item_id==it.item_id && x.clase===it.clase);
+    if (k >= 0) state.items[k].cantidad = Number(state.items[k].cantidad) + Number(it.cantidad||1);
+    else state.items.push(it);
+    renderOrden();
+  }
+
+  async function loadCatalogo() {
+    try {
+      $('#catError').classList.add('d-none');
+      $('#catLoading').classList.remove('d-none');
+      renderWarn();
+
+      const params = new URLSearchParams();
+      params.set('clase', state.clase);
+      const q = $('#search').value.trim();
+      if (q) params.set('search', q);
+      if (state.proveedor_id) params.set('proveedor_id', state.proveedor_id);
+      if (state.bodega_id)    params.set('bodega_id',   state.bodega_id);
+
+      const r = await fetch(`${API}?${params.toString()}`, { headers:{ 'Accept':'application/json' }});
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      renderCatalogo(Array.isArray(data.items) ? data.items : []);
+    } catch (err) {
+      console.error('Catalogo error:', err);
+      $('#catError').textContent = 'No se pudo cargar el catálogo.';
+      $('#catError').classList.remove('d-none');
+      renderCatalogo([]);
+    } finally {
+      $('#catLoading').classList.add('d-none');
+    }
+  }
+
+  // ---------- eventos cabecera ----------
+  $('#proveedor_id').addEventListener('change', e => {
+    state.proveedor_id = Number(e.target.value) || null;
+    loadCatalogo();
+  });
+  $('#bodega_id').addEventListener('change', e => {
+    state.bodega_id = Number(e.target.value) || null;
+    loadCatalogo();
+  });
+
+  // tabs clase
+  $('#tabProductos').addEventListener('click', () => {
+    state.clase='PRODUCTO';
+    $('#tabProductos').classList.replace('btn-outline-primary','btn-primary');
+    $('#tabInsumos').classList.replace('btn-primary','btn-outline-primary');
+    loadCatalogo();
+  });
+  $('#tabInsumos').addEventListener('click', () => {
+    state.clase='INSUMO';
+    $('#tabInsumos').classList.replace('btn-outline-primary','btn-primary');
+    $('#tabProductos').classList.replace('btn-primary','btn-outline-primary');
+    loadCatalogo();
+  });
+
+  // búsqueda
+  let t=null;
+  $('#search').addEventListener('input', () => { clearTimeout(t); t=setTimeout(loadCatalogo, 200); });
+
+  // Click "Agregar" en catálogo
+  $('#catalogo').addEventListener('click', (e) => {
+    const btn = e.target.closest('button.add'); if (!btn) return;
+    const it = {
+      item_id        : Number(btn.dataset.id),
+      nombre         : btn.dataset.nombre,
+      clase          : btn.dataset.clase || 'PRODUCTO',
+      cantidad       : 1,
+      precio_unitario: Number(btn.dataset.precio || 0),
+      imagen         : btn.dataset.imagen || ''
+    };
+    addOrMerge(it);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
+
+  // tabla orden
+  $('#tblOrden').addEventListener('input', (e) => {
+    if (!e.target.classList.contains('qty')) return;
+    const idx = Number(e.target.dataset.idx);
+    state.items[idx].cantidad = Number(e.target.value || 0);
+    renderOrden();
+  });
+  $('#tblOrden').addEventListener('click', (e) => {
+    if (!e.target.classList.contains('del')) return;
+    const idx = Number(e.target.dataset.idx);
+    state.items.splice(idx,1);
+    renderOrden();
+  });
+
+  // Guardar
+  $('#btnGuardar').addEventListener('click', async () => {
+    const tieneProducto = state.items.some(i => i.clase==='PRODUCTO');
+    if (!state.proveedor_id) { alert('Elige un proveedor.'); return; }
+    if (tieneProducto && !$('#bodega_id').value) { alert('Selecciona una bodega.'); return; }
+    if (state.items.length === 0) { alert('Agrega items a la orden.'); return; }
+
+    const payload = {
+      proveedor_id: state.proveedor_id,
+      bodega_id   : $('#bodega_id').value || null,
+      fecha_compra: $('#fecha_compra').value,
+      notas       : $('#notas').value || null,
+      items       : state.items
+    };
+
+    const url = <%= compra ? `'/compras-v2/${compra.id}'` : "'/compras-v2'" %>;
+    const r = await fetch(url, {
+      method: 'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    let data = {};
+    try { data = await r.json(); } catch {}
+    if (data.ok && data.redirect) { window.location.href = data.redirect; }
+    else if (<%= !!compra %>) { window.location.href = '/compras-v2/<%= compra ? compra.id : '' %>'; }
+    else { alert('No se pudo guardar.'); console.error(data); }
+  });
+
+  // init
+  // (si ya trae proveedor/bodega seleccionados de servidor se respetan)
+  renderOrden();
+  loadCatalogo();
+});
+</script>
+
+<%- include('../partials/footer') %>

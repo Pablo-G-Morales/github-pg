@@ -1,0 +1,66 @@
+<%- include('../partials/header', { title }) %>
+<link rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <h2 class="h4 mb-3">Devoluciones de Compras</h2>
+
+  <a href="/compras-v4/autorizar" class="btn btn-outline-secondary mb-3">
+    <i class="fa fa-arrow-left"></i> Volver a Compras
+  </a>
+
+  <div class="table-responsive">
+    <table id="tblDevoluciones" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Compra</th>
+          <th>Proveedor</th>
+          <th>Bodega</th>
+          <th>Fecha Compra</th>
+          <th>Creado Por</th>
+          <th>Creado En</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (items||[]).forEach(dev => { %>
+          <tr>
+            <td><%= dev.id %></td>
+            <td>
+              <a href="/compras-v2/<%= dev.compra_id %>" class="link-primary">#<%= dev.compra_id %></a>
+            </td>
+            <td><%= dev.proveedor_nombre || '—' %></td>
+            <td><%= dev.bodega_nombre || '—' %></td>
+            <td><%= dev.fecha_compra ? new Date(dev.fecha_compra).toLocaleString() : '—' %></td>
+            <td><%= dev.creado_por_nombre || '—' %></td>
+            <td><%= dev.creado_en ? new Date(dev.creado_en).toLocaleString() : '—' %></td>
+            <td class="text-nowrap">
+              <a href="/compras-v4/devoluciones/<%= dev.id %>" class="btn btn-sm btn-info">
+                <i class="fa fa-eye"></i> Ver
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function(){
+    $('#tblDevoluciones').DataTable({
+      order: [[0, 'desc']],
+      language:{
+        search:"Buscar:",
+        lengthMenu:"Mostrar _MENU_ registros",
+        info:"_START_–_END_ de _TOTAL_",
+        paginate:{previous:"Anterior", next:"Siguiente"}
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

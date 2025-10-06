@@ -118,4 +118,16 @@ router.post('/:id/eliminar', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.get('/nuevo', (_req, res) => {
+  res.render('planchas/form', { title: 'Nueva plancha', registro: {} });
+});
+
+// POST /planchas/nuevo
+router.post('/nuevo', async (req, res, next) => {
+  try {
+    const data = { nombre: req.body.nombre, imagen: req.body.imagen || null };
+    await pool.query('INSERT INTO planchas SET ?', [data]);
+    res.redirect('/informacion'); // vuelve a la lista de Info
+  } catch (e) { next(e); }
+});
 module.exports = router;

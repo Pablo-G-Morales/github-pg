@@ -1,52 +1,89 @@
-<%- include('../partials/header') %>
+<%- include('../partials/header', { title }) %>
 
-<section class="container py-4" style="max-width:760px;">
-
+<div class="container my-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="h4 mb-0">Compra #<%= compra.id %></h2>
-    <a href="/compras/ordenes/<%= compra.id %>/pdf" class="btn btn-outline-secondary" target="_blank">
-      <i class="fa fa-file-pdf"></i> PDF
-    </a>
-  </div>
-
-  <div class="card mb-3">
-    <div class="card-body">
-      <p class="mb-1"><strong>Proveedor:</strong> <%= compra.proveedor %></p>
-      <p class="mb-1"><strong>Registrada:</strong> <%= compra.creado_en.toLocaleString() %></p>
-      <p class="mb-0"><strong>Usuario:</strong> <%= compra.usuario || '-' %></p>
+    <h3>Compra #<%= compra.id %></h3>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="/compras">Volver</a>
+      <a class="btn btn-primary" href="/compras/<%= compra.id %>/editar">Editar</a>
     </div>
   </div>
 
-  <div class="table-responsive mb-3">
-    <table class="table table-sm table-striped">
-      <thead class="table-dark">
-        <tr>
-          <th>Insumo</th>
-          <th>Cantidad</th>
-          <th>Precio U.</th>
-          <th>Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% lineas.forEach(l=>{ %>
-          <tr>
-            <td><%= l.nombre %></td>
-            <td><%= l.cantidad %></td>
-            <td>Q<%= l.precio_unitario.toFixed(2) %></td>
-            <td>Q<%= l.subtotal.toFixed(2) %></td>
-          </tr>
-        <% }) %>
-      </tbody>
-      <tfoot>
-        <tr>
-          <th colspan="3" class="text-end">TOTAL</th>
-          <th>Q<%= compra.total_compra.toFixed(2) %></th>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+  <div class="row g-3">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="mb-2"><small class="text-muted">Proveedor</small><div><strong><%= compra.proveedor_nombre %></strong></div></div>
+          <div class="mb-2"><small class="text-muted">Fecha</small><div><%= compra.fecha_formateada %></div></div>
+          <div class="mb-2"><small class="text-muted">Bodega</small><div><%= compra.bodega_nombre || '-' %></div></div>
+          <div class="mb-2"><small class="text-muted">Tipo</small><div><%= compra.tipo %></div></div>
+          <div class="mb-2"><small class="text-muted">Estado</small>
+            <div>
+              <% if (user && user.rol_id === 1) { %>
+                <form class="d-flex gap-2" method="post" action="/compras/<%= compra.id %>/estado">
+                  <select name="estado" class="form-select form-select-sm" style="max-width:160px">
+                    <option value="PENDIENTE" <%= compra.estado==='PENDIENTE'?'selected':'' %>>PENDIENTE</option>
+                    <option value="APROBADO"  <%= compra.estado==='APROBADO' ?'selected':'' %>>APROBADO</option>
+                    <option value="ANULADO"   <%= compra.estado==='ANULADO'  ?'selected':'' %>>ANULADO</option>
+                  </select>
+                  <button class="btn btn-sm btn-outline-primary">Cambiar</button>
+                </form>
+              <% } else { %>
+                <span class="badge <%= compra.estado==='APROBADO' ? 'bg-success' : (compra.estado==='ANULADO' ? 'bg-danger':'bg-warning text-dark') %>">
+                  <%= compra.estado || 'PENDIENTE' %>
+                </span>
+              <% } %>
+            </div>
+          </div>
+          <div class="mb-2"><small class="text-muted">Creado por</small><div><%= compra.creador_nombre %></div></div>
+          <div><small class="text-muted">Modificado por</small><div><%= compra.modificador_nombre || '-' %></div></div>
+        </div>
+      </div>
+    </div>
 
-  <a href="/compras/ordenes" class="btn btn-secondary">Regresar</a>
-</section>
+    <div class="col-md-9">
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Categoría</th>
+                  <th>Producto/Insumo</th>
+                  <th class="text-end">Cantidad</th>
+                  <th class="text-end">Precio Unit.</th>
+                  <th class="text-end">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% let total = 0; %>
+                <% detalles.forEach(d => { const sub = Number(d.cantidad)*Number(d.precio_unitario); total+=sub; %>
+                  <tr>
+                    <td><%= d.producto_id ? 'PRODUCTO' : 'INSUMO' %></td>
+                    <td><%= d.producto_id ? (d.producto_nombre||('- #'+d.producto_id)) : (d.insumo_nombre||('- #'+d.insumo_id)) %></td>
+                    <td class="text-end"><%= d.cantidad %></td>
+                    <td class="text-end"><%= Number(d.precio_unitario).toFixed(2) %></td>
+                    <td class="text-end"><%= sub.toFixed(2) %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="4" class="text-end">Total</th>
+                  <th class="text-end"><%= Number(total).toFixed(2) %></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="mt-3">
+            <small class="text-muted d-block">Notas</small>
+            <div><%= (compra.notas || '').trim() || '-' %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <%- include('../partials/footer') %>

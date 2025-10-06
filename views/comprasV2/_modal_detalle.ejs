@@ -1,0 +1,44 @@
+<!-- Modal #2: Detalle de producto -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detNombre">Ítem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <img id="detImg" src="/img/products/no-image.png"
+                 class="img-fluid rounded" alt="Foto" style="width:100%;object-fit:cover;">
+          </div>
+          <div class="col-md-7">
+            <div class="row mb-2">
+              <div class="col-6">Marca: <strong id="detMarca">-</strong></div>
+              <div class="col-6">Material: <strong id="detMaterial">-</strong></div>
+              <div class="col-6">Color: <strong id="detColor">-</strong></div>
+              <div class="col-6">Forma: <strong id="detForma">-</strong></div>
+              <div class="col-6">Unidad: <strong id="detUnidad">-</strong></div>
+              <div class="col-6">Stock: <strong id="detStock">0</strong></div>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Precio compra (Q)</label>
+                <input id="detPrecio" type="number" step="0.01" class="form-control" placeholder="0.00">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Cantidad</label>
+                <input id="detCantidad" type="number" step="0.01" class="form-control" value="1">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnAgregarDetalle" class="btn btn-primary">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>

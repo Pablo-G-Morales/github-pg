@@ -1,0 +1,66 @@
+<%- include('../partials/header') %>
+
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4">Compra #<%= compra.id %></h2>
+    <a href="/compras-v2" class="btn btn-outline-secondary">Volver</a>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3"><small class="text-muted d-block">Proveedor</small><strong><%= compra.proveedor_nombre %></strong></div>
+    <div class="col-md-3"><small class="text-muted d-block">Fecha</small><%= compra.fecha_formateada %></div>
+    <div class="col-md-3"><small class="text-muted d-block">Bodega</small><%= compra.bodega_nombre || '-' %></div>
+    <div class="col-md-3">
+      <small class="text-muted d-block">Estado</small>
+      <% if (user && user.rol_id === 1) { %>
+        <form method="post" action="/compras-v2/<%= compra.id %>/estado" class="d-flex gap-2">
+          <select name="estado" class="form-select form-select-sm" style="max-width: 180px">
+            <option value="PENDIENTE" <%= compra.estado==='PENDIENTE'?'selected':'' %>>PENDIENTE</option>
+            <option value="APROBADO"  <%= compra.estado==='APROBADO' ?'selected':'' %>>APROBADO</option>
+            <option value="DENEGADO"  <%= compra.estado==='DENEGADO' ?'selected':'' %>>DENEGADO</option>
+          </select>
+          <button class="btn btn-sm btn-outline-primary">Cambiar</button>
+        </form>
+      <% } else { %>
+        <span class="badge <%= compra.estado==='APROBADO' ? 'bg-success' : (compra.estado==='DENEGADO' ? 'bg-danger':'bg-warning text-dark') %>"><%= compra.estado %></span>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Clase</th>
+              <th>Producto/Insumo</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% detalles.forEach(d => { %>
+              <tr>
+                <td><span class="badge <%= d.producto_id?'bg-success':'bg-secondary' %>"><%= d.producto_id?'PRODUCTO':'INSUMO' %></span></td>
+                <td><%= d.producto_nombre || d.insumo_nombre %></td>
+                <td class="text-end"><%= Number(d.cantidad).toFixed(2) %></td>
+                <td class="text-end">Q <%= Number(d.precio_unitario).toFixed(2) %></td>
+                <td class="text-end">Q <%= Number(d.subtotal).toFixed(2) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end">Total</th>
+              <th class="text-end">Q <%= Number(compra.total).toFixed(2) %></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

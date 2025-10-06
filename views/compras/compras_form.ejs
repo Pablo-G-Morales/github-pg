@@ -1,101 +1,253 @@
-<%- include('../partials/header') %>
+<%- include('../partials/header', { title }) %>
 
-<section class="container py-4" style="max-width:780px;">
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3><%= compra ? `Editar compra #${compra.id}` : 'Nueva compra' %></h3>
+    <div>
+      <a href="/compras" class="btn btn-outline-secondary">Volver</a>
+      <% /* guardar desde este mismo formulario */ %>
+      <button form="frmCompra" class="btn btn-primary">Guardar</button>
+    </div>
+  </div>
 
-  <h2 class="h4 mb-3">Nueva compra de insumos</h2>
+  <form id="frmCompra" method="post" action="<%= compra ? `/compras/${compra.id}` : '/compras' %>">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Proveedor</label>
+        <select id="proveedor" name="proveedor_id" class="form-select" required>
+          <option value="">Seleccione…</option>
+          <% proveedores.forEach(p => { %>
+            <option value="<%= p.id %>" <%= compra?.proveedor_id===p.id ? 'selected':'' %>><%= p.nombre %></option>
+          <% }) %>
+        </select>
+      </div>
 
-  <form action="/compras/ordenes/nuevo" method="post">
+      <div class="col-md-4">
+        <label class="form-label">Fecha/hora</label>
+        <input type="datetime-local" name="fecha_compra" class="form-control"
+               value="<%= compra?.fecha_compra_local || '' %>" required>
+      </div>
 
-    <!-- PROVEEDOR -->
-    <div class="mb-3">
-      <label class="form-label">Proveedor</label>
-      <select name="provider_id" class="form-select" required>
-        <option value="">Seleccione...</option>
-        <% proveedores.forEach(p=>{ %>
-          <option value="<%= p.id %>"><%= p.nombre %></option>
-        <% }) %>
-      </select>
+      <div class="col-md-4">
+        <label class="form-label">Tipo</label>
+        <select id="tipo" name="tipo" class="form-select">
+          <option value="PRODUCTO" <%= (compra?.tipo||'PRODUCTO')==='PRODUCTO'?'selected':'' %>>Producto</option>
+          <option value="INSUMO"   <%= (compra?.tipo||'PRODUCTO')==='INSUMO'  ?'selected':'' %>>Insumo</option>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Bodega (solo para PRODUCTO)</label>
+        <select id="bodega" name="bodega_id" class="form-select" <%= (compra?.tipo||'PRODUCTO')==='PRODUCTO'?'':'disabled' %>>
+          <option value="">Seleccione…</option>
+          <% bodegas.forEach(b => { %>
+            <option value="<%= b.id %>" <%= compra?.bodega_id===b.id ? 'selected':'' %>><%= b.nombre %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Notas</label>
+        <textarea name="notas" class="form-control" rows="1"><%= compra?.notas || '' %></textarea>
+      </div>
     </div>
 
-    <!-- DETALLE -->
-    <div class="table-responsive mb-3">
-      <table class="table table-bordered align-middle" id="tablaDetalle">
-        <thead class="table-light">
+    <hr class="my-4">
+
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <strong>Ítems</strong>
+      <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddProd">Producto</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="btnAddIns">Insumo</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle" id="tblItems">
+        <thead>
           <tr>
-            <th style="width:45%;">Insumo</th>
-            <th>Cant.</th>
-            <th>Precio U.</th>
-            <th></th>
+            <th style="width:140px">Categoría</th>
+            <th>Producto/Insumo</th>
+            <th style="width:120px">Cantidad</th>
+            <th style="width:160px">Precio Unit.</th>
+            <th style="width:120px">Subtotal</th>
+            <th style="width:40px"></th>
           </tr>
         </thead>
         <tbody>
-          <!-- Fila inicial -->
-          <tr>
-            <td>
-              <select name="insumo_id[]" class="form-select" required>
-                <option value="">- seleccione -</option>
-                <% insumos.forEach(i=>{ %>
-                  <option value="<%= i.id %>"><%= i.nombre %></option>
-                <% }) %>
-              </select>
-            </td>
-            <td><input type="number" name="cantidad[]" class="form-control" min="0.01" step="0.01" required></td>
-            <td><input type="number" name="precio_unitario[]" class="form-control" min="0.01" step="0.01" required></td>
-            <td class="text-center">
-              <button type="button" class="btn btn-danger btn-sm btnDel"><i class="fa fa-trash"></i></button>
-            </td>
-          </tr>
+          <% (detalles||[]).forEach((d,idx)=>{ %>
+            <tr>
+              <td>
+                <select class="form-select form-select-sm categoria">
+                  <option value="PRODUCTO" <%= d.producto_id ? 'selected':'' %>>PRODUCTO</option>
+                  <option value="INSUMO"   <%= d.insumo_id   ? 'selected':'' %>>INSUMO</option>
+                </select>
+              </td>
+              <td class="cell-entity">
+                <% if (d.producto_id) { %>
+                  <select class="form-select form-select-sm producto" name="items[<%= idx %>][producto_id]">
+                    <% productos.forEach(p => { %>
+                      <option value="<%= p.id %>" <%= d.producto_id===p.id?'selected':'' %>><%= p.nombre %></option>
+                    <% }) %>
+                  </select>
+                <% } else { %>
+                  <select class="form-select form-select-sm insumo" name="items[<%= idx %>][insumo_id]">
+                    <% insumos.forEach(i => { %>
+                      <option value="<%= i.id %>" <%= d.insumo_id===i.id?'selected':'' %>><%= i.nombre %></option>
+                    <% }) %>
+                  </select>
+                <% } %>
+              </td>
+              <td><input type="number" min="0" step="1" class="form-control form-control-sm cantidad" name="items[<%= idx %>][cantidad]" value="<%= d.cantidad %>"></td>
+              <td><input type="number" min="0" step="0.01" class="form-control form-control-sm precio" name="items[<%= idx %>][precio_unitario]" value="<%= d.precio_unitario %>"></td>
+              <td class="text-end subtotal">0.00</td>
+              <td><button type="button" class="btn btn-sm btn-link text-danger btnDel">&times;</button></td>
+              <input type="hidden" name="items[<%= idx %>][categoria]" value="<%= d.producto_id?'PRODUCTO':'INSUMO' %>">
+            </tr>
+          <% }) %>
         </tbody>
+        <tfoot>
+          <tr>
+            <th colspan="4" class="text-end">Total:</th>
+            <th class="text-end" id="txtTotal">0.00</th>
+            <th></th>
+          </tr>
+        </tfoot>
       </table>
-
-      <button type="button" id="btnAddRow" class="btn btn-outline-primary btn-sm">
-        <i class="fa fa-plus"></i> Agregar línea
-      </button>
     </div>
-
-    <button class="btn btn-success"><i class="fa fa-save"></i> Guardar compra</button>
-    <a href="/compras/ordenes" class="btn btn-secondary">Cancelar</a>
   </form>
-</section>
+</div>
 
-<!-- -------------  JS sin jQuery ------------- -->
 <script>
-(function () {
-  /* --- plantilla de fila (renderizada por EJS) --- */
-  const rowTemplate = `
-    <tr>
+(() => {
+  const $proveedor = document.getElementById('proveedor');
+  const $tipo = document.getElementById('tipo');
+  const $bodega = document.getElementById('bodega');
+  const $tbl = document.getElementById('tblItems').querySelector('tbody');
+
+  function fmt(n){ return (Number(n)||0).toFixed(2); }
+  function recalc() {
+    let total = 0;
+    document.querySelectorAll('#tblItems tbody tr').forEach(tr => {
+      const qty = parseFloat(tr.querySelector('.cantidad')?.value || 0);
+      const pr  = parseFloat(tr.querySelector('.precio')?.value   || 0);
+      const sub = qty * pr;
+      tr.querySelector('.subtotal').textContent = fmt(sub);
+      total += sub;
+    });
+    document.getElementById('txtTotal').textContent = fmt(total);
+  }
+
+  $tbl.addEventListener('input', (e) => {
+    if (e.target.matches('.cantidad,.precio')) recalc();
+  });
+
+  document.getElementById('btnAddProd').addEventListener('click', async () => {
+    const idx = $tbl.querySelectorAll('tr').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
       <td>
-        <select name="insumo_id[]" class="form-select" required>
-          <option value="">- seleccione -</option>
-          <% insumos.forEach(i=>{ %>
+        <select class="form-select form-select-sm categoria">
+          <option value="PRODUCTO" selected>PRODUCTO</option>
+          <option value="INSUMO">INSUMO</option>
+        </select>
+      </td>
+      <td class="cell-entity">
+        <select class="form-select form-select-sm producto" name="items[${idx}][producto_id]">
+          <option value="">Seleccione…</option>
+        </select>
+      </td>
+      <td><input type="number" min="0" step="1" class="form-control form-control-sm cantidad" name="items[${idx}][cantidad]" value="1"></td>
+      <td><input type="number" min="0" step="0.01" class="form-control form-control-sm precio" name="items[${idx}][precio_unitario]" value=""></td>
+      <td class="text-end subtotal">0.00</td>
+      <td><button type="button" class="btn btn-sm btn-link text-danger btnDel">&times;</button></td>
+      <input type="hidden" name="items[${idx}][categoria]" value="PRODUCTO">
+    `;
+    $tbl.appendChild(tr);
+    await loadProductosForProveedor(tr.querySelector('select.producto'));
+    recalc();
+  });
+
+  document.getElementById('btnAddIns').addEventListener('click', () => {
+    const idx = $tbl.querySelectorAll('tr').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <select class="form-select form-select-sm categoria">
+          <option value="PRODUCTO">PRODUCTO</option>
+          <option value="INSUMO" selected>INSUMO</option>
+        </select>
+      </td>
+      <td class="cell-entity">
+        <select class="form-select form-select-sm insumo" name="items[${idx}][insumo_id]">
+          <option value="">Seleccione…</option>
+          <% insumos.forEach(i => { %>
             <option value="<%= i.id %>"><%= i.nombre %></option>
           <% }) %>
         </select>
       </td>
-      <td><input type="number" name="cantidad[]" class="form-control" min="0.01" step="0.01" required></td>
-      <td><input type="number" name="precio_unitario[]" class="form-control" min="0.01" step="0.01" required></td>
-      <td class="text-center">
-        <button type="button" class="btn btn-danger btn-sm btnDel"><i class="fa fa-trash"></i></button>
-      </td>
-    </tr>
-  `;
-
-  const tbody = document.querySelector('#tablaDetalle tbody');
-  const btnAddRow = document.getElementById('btnAddRow');
-
-  // Agregar fila
-  btnAddRow.addEventListener('click', () => {
-    tbody.insertAdjacentHTML('beforeend', rowTemplate);
+      <td><input type="number" min="0" step="1" class="form-control form-control-sm cantidad" name="items[${idx}][cantidad]" value="1"></td>
+      <td><input type="number" min="0" step="0.01" class="form-control form-control-sm precio" name="items[${idx}][precio_unitario]" value="<%= (insumos.find(i=>i.id===0)?.precio_estandar)||'' %>"></td>
+      <td class="text-end subtotal">0.00</td>
+      <td><button type="button" class="btn btn-sm btn-link text-danger btnDel">&times;</button></td>
+      <input type="hidden" name="items[${idx}][categoria]" value="INSUMO">
+    `;
+    $tbl.appendChild(tr);
+    recalc();
   });
 
-  // Eliminar fila (delegado)
-  tbody.addEventListener('click', (e) => {
-    if (e.target.closest('.btnDel')) {
-      if (tbody.rows.length > 1) {
-        e.target.closest('tr').remove();
-      }
+  document.getElementById('tblItems').addEventListener('click', (e) => {
+    if (e.target.classList.contains('btnDel')) {
+      e.target.closest('tr').remove(); recalc();
     }
   });
+
+  // Toggle bodega por tipo
+  $tipo.addEventListener('change', () => {
+    const isProd = $tipo.value === 'PRODUCTO';
+    $bodega.disabled = !isProd;
+    if (!isProd) $bodega.value = '';
+  });
+
+  // Cargar productos del proveedor elegido y precargar precio al seleccionar producto
+  async function loadProductosForProveedor(selectProducto) {
+    const provId = Number($proveedor.value);
+    if (!selectProducto) return;
+    selectProducto.innerHTML = '<option value="">Seleccione…</option>';
+    if (!provId) return;
+
+    try {
+      const r = await fetch(`/compras/api/proveedores/${provId}/productos`);
+      const data = await r.json();
+      (data.productos || []).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.product_id;
+        opt.textContent = p.producto_nombre;
+        opt.dataset.precio = p.precio_compra; // último precio
+        selectProducto.appendChild(opt);
+      });
+
+      // al cambiar producto, precargar precio
+      selectProducto.addEventListener('change', (ev) => {
+        const tr = ev.target.closest('tr');
+        const precio = ev.target.selectedOptions[0]?.dataset?.precio || '';
+        tr.querySelector('.precio').value = precio;
+        recalc();
+      }, { once: true }); // se agrega una vez por fila
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Si cambia el proveedor, refrescar combos de PRODUCTO existentes
+  $proveedor.addEventListener('change', () => {
+    document.querySelectorAll('#tblItems select.producto').forEach(loadProductosForProveedor);
+  });
+
+  // Inicial: para filas existentes tipo PRODUCTO, cargar opciones por proveedor actual
+  document.querySelectorAll('#tblItems select.producto').forEach(loadProductosForProveedor);
+
+  // Recalcular subtotales al cargar
+  recalc();
 })();
 </script>
 

@@ -1,0 +1,83 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4" style="max-width: 900px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Autorizar compra #<%= compra.id %></h2>
+    <a href="/compras-v4/autorizar" class="btn btn-outline-secondary">
+      <i class="fa fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <p><strong>Proveedor:</strong> <%= compra.proveedor_nombre %></p>
+      <p><strong>Bodega:</strong> <%= compra.bodega_nombre %></p>
+      <p><strong>Fecha:</strong> <%= compra.fecha_compra.toLocaleString() %></p>
+      <p><strong>Total:</strong> Q <%= Number(compra.total).toFixed(2) %></p>
+      <p><strong>Estado actual:</strong>
+        <% if (compra.estado === 'APROBADO') { %>
+          <span class="badge bg-success">APROBADO</span>
+        <% } else { %>
+          <span class="badge bg-warning text-dark"><%= compra.estado %></span>
+        <% } %>
+      </p>
+    </div>
+  </div>
+
+  <form method="post" action="/compras-v4/autorizar/<%= compra.id %>" enctype="multipart/form-data">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Número de factura</label>
+            <input type="text" name="numero_factura" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Forma de pago</label>
+            <select name="forma_pago_id" class="form-select">
+              <option value="">-- Seleccione --</option>
+              <% formas.forEach(f=>{ %>
+                <option value="<%= f.id %>"><%= f.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Condición de pago</label>
+            <select name="condicion_pago_id" class="form-select">
+              <option value="">-- Seleccione --</option>
+              <% condiciones.forEach(c=>{ %>
+                <option value="<%= c.id %>"><%= c.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Tipo de documento</label>
+            <select name="tipo_documento_id" class="form-select">
+              <option value="">-- Seleccione --</option>
+              <% tiposDoc.forEach(t=>{ %>
+                <option value="<%= t.id %>"><%= t.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Archivo (PDF/imagen)</label>
+            <input type="file" name="archivo" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.webp">
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <a href="/compras-v4/autorizar" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success">
+          <i class="fa fa-check me-1"></i> Completar compra
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
