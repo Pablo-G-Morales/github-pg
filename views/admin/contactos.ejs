@@ -1,0 +1,58 @@
+<%- include('../partials/header', { title, user }); %>
+
+  <div class="container py-4">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Contactos</h3>
+            <p class="text-muted mb-4">
+              Soporte y asesoramiento para el sistema SubliRex
+            </p>
+
+            <div class="list-group mb-4">
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                href="mailto:<%= contact.email %>">
+                <div>
+                  <strong>Correo:</strong><br>
+                  <span class="text-muted">creadorpgmp@hotmail.com</span>
+                </div>
+                <i class="fa fa-envelope"></i>
+              </a>
+
+              <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                href="tel:<%= contact.phone.replace(/\s+/g,'') %>">
+                <div>
+                  <strong>Teléfono:</strong><br>
+                  <span class="text-muted">55839108</span>
+                </div>
+                <i class="fa fa-phone"></i>
+              </a>
+            </div>
+
+            <div class="d-flex gap-2">
+              <% if (waNumber) { %>
+                <a class="btn btn-success"
+                  href="https://api.whatsapp.com/send?phone=50255839108&text=Hola%20%F0%9F%91%8B%20necesito%20soporte%20%E2%9A%99%EF%B8%8F%20para%20el%20sistema%20web%20%F0%9F%8C%90%20de%20SubliRex%20%F0%9F%A6%95"
+                  target="_blank" rel="noopener">
+                  <i class="fa fa-whatsapp"></i> WhatsApp
+                </a>
+                <% } %>
+
+                  <a class="btn btn-outline-secondary" href="/dashboard">
+                    Volver al Dashboard
+                  </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+          <small>
+            Puede consultar el manual de usuario si lo deseas aquí:
+            <a href="https://u.pcloud.link/publink/show?code=XZo1x95ZLISMjTzWNgYsb6UGMK5pBzhfe8uV" target="_blank" rel="noopener noreferrer"
+              class="alert-link">
+              Manual de Usuario
+            </a>
+          </small>
+        </div>
+        <%- include('../partials/footer'); %>

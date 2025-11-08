@@ -1,0 +1,114 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <a href="/pedidos/autorizar/lista" class="btn btn-outline-secondary">
+      <i class="fa fa-arrow-left"></i> Volver a lista
+    </a>
+  </div>
+
+  <!-- Datos del pedido -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3"><strong>Pedido:</strong> #<%= pedido.id %></div>
+        <div class="col-md-3"><strong>Proveedor:</strong> <%= pedido.proveedor_nombre || '—' %></div>
+        <div class="col-md-3"><strong>Bodega:</strong> <%= pedido.bodega_nombre || '—' %></div>
+        <div class="col-md-3"><strong>Estado actual:</strong>
+          <% const cls = pedido.estado==='COMPLETADO' ? 'bg-success' :
+                         pedido.estado==='EN_PROCESO' ? 'bg-info' :
+                         pedido.estado==='ANULADO' ? 'bg-danger' : 'bg-warning text-dark'; %>
+          <span class="badge <%= cls %>"><%= pedido.estado %></span>
+        </div>
+        <div class="col-md-3"><strong>Fecha:</strong> <%= pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleString() : '—' %></div>
+        <div class="col-md-3"><strong>Total:</strong> Q <%= Number(pedido.total||0).toFixed(2) %></div>
+        <div class="col-md-6"><strong>Dirección:</strong> <%= pedido.direccion || '—' %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle -->
+  <div class="table-responsive mb-3">
+    <table class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Producto</th>
+          <th class="text-end">Cantidad</th>
+          <th class="text-end">Precio</th>
+          <th class="text-end">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (detalles||[]).forEach((d,i)=>{ %>
+          <tr>
+            <td><%= i+1 %></td>
+            <td><%= d.producto_nombre || ('#'+d.producto_id) %></td>
+            <td class="text-end"><%= Number(d.cantidad||0) %></td>
+            <td class="text-end">Q <%= Number(d.precio_unitario||0).toFixed(2) %></td>
+            <td class="text-end">Q <%= Number((d.cantidad||0)*(d.precio_unitario||0)).toFixed(2) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4" class="text-end">Total</th>
+          <th class="text-end">Q <%= Number(pedido.total||0).toFixed(2) %></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Formulario para completar -->
+  <div class="card">
+    <div class="card-body">
+      <form method="post" action="/pedidos/autorizar/<%= pedido.id %>/completar">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Forma de pago</label>
+            <select name="forma_pago_id" class="form-select">
+              <option value="">— Seleccionar —</option>
+              <% (formas||[]).forEach(f => { %>
+                <option value="<%= f.id %>"><%= f.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Condición de pago</label>
+            <select name="condicion_pago_id" class="form-select">
+              <option value="">— Seleccionar —</option>
+              <% (condiciones||[]).forEach(c => { %>
+                <option value="<%= c.id %>"><%= c.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Tipo de documento</label>
+            <select name="tipo_documento_id" class="form-select">
+              <option value="">— Seleccionar —</option>
+              <% (tiposDoc||[]).forEach(t => { %>
+                <option value="<%= t.id %>"><%= t.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+
+        <div class="alert alert-info mt-3 mb-0">
+          Al <b>Completar</b> este pedido se <b>descontará stock</b> de la bodega asignada.
+        </div>
+
+        <div class="text-end mt-3">
+          <a href="/pedidos/autorizar/lista" class="btn btn-secondary">Cancelar</a>
+          <button class="btn btn-success">
+            <i class="fa fa-check"></i> Completar pedido
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

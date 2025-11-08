@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
   filename: (_, file, cb) =>
     cb(null, Date.now() + path.extname(file.originalname))
 });
-const upload = multer({ storage, limits: { fileSize: 1 * 1024 * 1024 } });
+const upload = multer({ storage });
 
 /* ---------- Helpers ---------- */
 const numOrZero = v => (v === undefined || v === null || v === '' ? 0 : Number(v));
@@ -102,9 +102,9 @@ router.post('/nuevo', auth, upload.single('img'), async (req, res, next) => {
         : (req.body.proveedores ? [req.body.proveedores] : []));
 
   // Parche: normalizar numéricos a 0 si vienen vacíos
-  const pc  = numOrZero(precio_compra);
-  const pv  = numOrZero(precio_venta);
-  const cap = numOrZero(capacidad);
+const pc  = (precio_compra === '' || precio_compra == null) ? 0 : Number(precio_compra);
+const pv  = (precio_venta  === '' || precio_venta  == null) ? null : Number(precio_venta);
+const cap = (capacidad     === '' || capacidad     == null) ? 0 : Number(capacidad);
 
   let imgRuta = null;
 

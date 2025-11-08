@@ -1,16 +1,61 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>404 - No encontrado</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link href="/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <div class="container py-5">
-    <h1 class="display-5 mb-3">404</h1>
-    <p class="lead">La ruta <code><%= url %></code> no existe.</p>
-    <a href="/" class="btn btn-primary">Ir al inicio</a>
+<%- include('partials/header', { title: '404 - No encontrado' }) %>
+
+<style>
+  /* Usa variables de Bootstrap para que el tema (light/dark) fluya solo */
+  :root {
+    --shadow-color: rgba(var(--bs-primary-rgb), .35);
+  }
+  [data-bs-theme="dark"] {
+    --shadow-color: rgba(var(--bs-primary-rgb), .45);
+  }
+
+  @keyframes floaty {
+    0%   { transform: translateY(0); }
+    50%  { transform: translateY(-8px); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .icon-spin-slow { animation: spin 20s linear infinite; }
+  .icon-float {
+    animation: floaty 3s ease-in-out infinite;
+    filter: drop-shadow(0 6px 14px var(--shadow-color));
+  }
+
+  /* Tarjeta central que se adapta al tema */
+  .error-card {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .85rem;
+    box-shadow: 0 .25rem .75rem rgba(0,0,0,.06);
+  }
+  .error-muted { color: var(--bs-secondary-color); }
+</style>
+
+<div class="container py-5 d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+  <div class="error-card p-4 p-md-5 text-center" style="max-width: 680px; width: 100%;">
+
+    <!-- Ícono animado arriba del 404 -->
+    <div class="mb-3 icon-spin-slow" aria-hidden="true">
+      <!-- color = currentColor para heredar de tema -->
+      <i class="fa fa-compass fa-5x icon-float" style="color: var(--bs-primary);"></i>
+    </div>
+
+    <h1 class="display-5 fw-semibold mb-2">404</h1>
+    <p class="lead mb-4 error-muted">
+      La ruta <code class="user-select-all"><%= url %></code> no existe o fue movida.
+    </p>
+
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="/" class="btn btn-primary">
+        <i class="fa fa-home me-1"></i> Ir al inicio
+      </a>
+      <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        <i class="fa fa-arrow-left me-1"></i> Volver
+      </a>
+    </div>
+
   </div>
-</body>
-</html>
+</div>

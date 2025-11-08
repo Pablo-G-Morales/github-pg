@@ -1,0 +1,169 @@
+<%- include('../partials/header', { title: `Pedido #${pedido.id}` }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Pedido #<%= pedido.id %></h2>
+
+    <div class="d-flex gap-2">
+      <!-- Botón que abre el modal visor -->
+      <button
+        type="button"
+        class="btn btn-outline-info"
+        data-bs-toggle="modal"
+        data-bs-target="#modalDiseno"
+        data-url="/pedidos/<%= pedido.id %>/diseno/raw">
+        <i class="fa fa-eye"></i> Ver diseño 🖼️
+      </button>
+
+      <a href="/pedidos/<%= pedido.id %>/recibo" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+        <i class="fa fa-print"></i> Recibo / Imprimir
+      </a>
+      <a href="/pedidos" class="btn btn-light">Volver</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="fw-bold mb-1">Cliente</div>
+          <div><%= (pedido.nom_nuevo && pedido.nom_nuevo.trim()) ? pedido.nom_nuevo : 'Consumidor final' %></div>
+          <% if (pedido.tel_nuevo) { %>
+            <small class="text-muted d-block">Tel: <%= pedido.tel_nuevo %></small>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="fw-bold mb-1">Datos del pedido</div>
+          <div>Fecha: <%= pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleString('es-GT', { hour12:true }) : '—' %></div>
+          <div>Bodega: <%= pedido.bodega_nombre || '—' %></div>
+          <% if (pedido.direccion) { %>
+            <div>Dirección: <%= pedido.direccion %></div>
+          <% } %>
+          <% if (pedido.notas) { %>
+            <div>Notas: <%= pedido.notas %></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <% const cls =
+            pedido.estado === 'COMPLETADO' ? 'bg-success' :
+            pedido.estado === 'EN_PROCESO' ? 'bg-info' :
+            pedido.estado === 'ANULADO' ? 'bg-danger' : 'bg-secondary'; %>
+          <div class="fw-bold mb-1">Estado</div>
+          <div class="mb-2">
+            <span class="badge <%= cls %>"><%= pedido.estado %></span>
+          </div>
+          <div class="fw-bold mb-1">Total</div>
+          <div class="fs-5">Q <%= Number(pedido.total || 0).toFixed(2) %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-bold">Productos</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Producto</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Precio Unit. (Q)</th>
+              <th class="text-end">Subtotal (Q)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if ((detalles || []).length === 0) { %>
+              <tr><td colspan="5" class="text-center text-muted py-4">Sin productos</td></tr>
+            <% } else { %>
+              <% detalles.forEach((d, i) => { %>
+                <tr>
+                  <td><%= i + 1 %></td>
+                  <td><%= d.producto_nombre || ('#' + d.producto_id) %></td>
+                  <td class="text-end"><%= Number(d.cantidad).toLocaleString('es-GT') %></td>
+                  <td class="text-end"><%= Number(d.precio_unitario).toFixed(2) %></td>
+                  <td class="text-end"><%= Number((+d.cantidad) * (+d.precio_unitario)).toFixed(2) %></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end">Total</th>
+              <th class="text-end">Q <%= Number(pedido.total || 0).toFixed(2) %></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal Visor de Diseño (PDF/Imagen) ============ -->
+<div class="modal fade" id="modalDiseno" tabindex="-1" aria-labelledby="modalDisenoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 id="modalDisenoLabel" class="modal-title">
+          <i class="fa fa-file-pdf"></i> Diseño del pedido #<%= pedido.id %>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-0">
+        <iframe id="iframeDiseno" src="about:blank" style="border:0;width:100%;height:75vh;" title="Visor de diseño"></iframe>
+      </div>
+      <div class="modal-footer">
+        <a id="btnAbrirNueva" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
+          <i class="fa fa-external-link-alt"></i> Abrir en pestaña
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Parámetros de visor PDF para ocultar panel lateral y ajustar ancho:
+  const PDF_PARAMS = '#toolbar=1&navpanes=0&scrollbar=1&view=FitH';
+
+  const modalEl = document.getElementById('modalDiseno');
+  const iframe  = document.getElementById('iframeDiseno');
+  const openNew = document.getElementById('btnAbrirNueva');
+
+  // Al abrir el modal, setear src del iframe con los parámetros,
+  // evitando duplicarlos si la URL ya trae '#...'
+  modalEl.addEventListener('show.bs.modal', (ev) => {
+    const btn = ev.relatedTarget;
+    const baseUrl = btn?.getAttribute('data-url') || '';
+    if (!baseUrl) return;
+
+    // Si ya tiene fragmento (#...), no agregamos los nuestros
+    const hasHash = baseUrl.includes('#');
+    const finalUrl = hasHash ? baseUrl : (baseUrl + PDF_PARAMS);
+
+    iframe.src = finalUrl;
+    openNew.href = finalUrl;
+  });
+
+  // Al cerrar, limpiar el src para liberar recursos
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    iframe.src = 'about:blank';
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>

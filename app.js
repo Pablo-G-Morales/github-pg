@@ -46,13 +46,29 @@ const catalogosTiposDocumentoRouter  = require('./routes/catalogos_tipos_documen
 const catalogosFormasPagoRouter      = require('./routes/catalogos_formas_pago');
 const catalogosCondicionesPagoRouter = require('./routes/catalogos_condiciones_pago');
 
+/* PEDIDOS */
+const pedidos1Router                 = require('./routes/pedidos1');
+const pedidosDeptosRouter            = require('./routes/pedidos_deptos');
+const pedidosMunicipiosRouter        = require('./routes/pedidos_municipios');
+const pedidosTiendaRouter            = require('./routes/pedidos_tienda'); // legacy
+const pedidosRouter                  = require('./routes/pedidos');        // ← el bueno
+const pedidosAutorizarRouter         = require('./routes/pedidos_autorizar');
+const devolucionesVentasRouter = require('./routes/devoluciones_ventas');
+/* Ventas */
+const ventasRouter = require('./routes/ventas');   // <— NUEVO
+const disenosRouter = require('./routes/disenos');
+const insumosDesc = require('./routes/insumos_descuento');
+/* Imagen */
+const dashImgs = require('./routes/dashboard_imagenes');
+const adminContactos = require('./routes/admin_contactos');
+
+
 /* =========================
    Config básica
 ========================= */
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// ⬅️ IMPORTANTE para formularios con campos anidados (devoluciones)
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -123,9 +139,34 @@ app.use('/catalogos/formas-pago',      catalogosFormasPagoRouter);
 app.use('/catalogos/condiciones-pago', catalogosCondicionesPagoRouter);
 
 /* =========================
+   PEDIDOS
+========================= */
+// versiones antiguas bajo otra base para que NO tapen las rutas buenas
+app.use('/pedidos1',          pedidos1Router);
+app.use('/pedidos/departamentos', pedidosDeptosRouter);
+app.use('/pedidos/municipios',    pedidosMunicipiosRouter);
+app.use('/pedidos-legacy',     pedidosTiendaRouter); // ← antes estaba en '/pedidos'
+app.use('/pedidos',            pedidosRouter);       // ← único router en '/pedidos'
+app.use('/pedidos',            pedidosAutorizarRouter);
+app.use('/devoluciones-ventas', devolucionesVentasRouter);
+app.use('/', disenosRouter);
+app.use('/insumos', insumosDesc);
+
+/* =========================
    INFORMACIÓN
 ========================= */
 app.use('/informacion', informacionRouter);
+
+/* =========================
+   VENTAS
+========================= */
+app.use('/ventas',             ventasRouter); 
+
+/* =========================
+   ADMIN
+========================= */
+app.use('/', dashImgs);
+app.use('/', adminContactos);
 
 /* =========================
    404 y errores

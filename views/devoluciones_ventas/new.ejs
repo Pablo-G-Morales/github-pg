@@ -1,0 +1,125 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><i class="fa fa-plus-circle"></i> <%= title %></h2>
+    <a class="btn btn-sm btn-outline-secondary" href="/pedidos/show/<%= pedido.id %>">
+      <i class="fa fa-arrow-left"></i> Volver al pedido
+    </a>
+  </div>
+
+  <!-- Resumen del pedido -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-sm-6"><strong>Pedido:</strong> #<%= pedido.id %></div>
+        <div class="col-sm-6"><strong>Estado:</strong> <span class="badge bg-success"><%= pedido.estado %></span></div>
+        <div class="col-sm-6"><strong>Fecha:</strong> <%= new Date(pedido.fecha).toLocaleString() %></div>
+        <div class="col-sm-6"><strong>Total:</strong> Q <%= Number(pedido.total || 0).toFixed(2) %></div>
+        <div class="col-12"><strong>Cliente:</strong> <%= pedido.nom_nuevo || 'Consumidor final' %> • <%= pedido.tel_nuevo || '—' %></div>
+        <div class="col-12"><strong>Dirección:</strong> <%= pedido.direccion || '—' %></div>
+      </div>
+    </div>
+  </div>
+
+  <form id="frmNuevaDV" action="/devoluciones-ventas" method="post" class="needs-validation" novalidate>
+    <input type="hidden" name="pedido_id" value="<%= pedido.id %>">
+
+    <div class="mb-3">
+      <label class="form-label">Motivo general (opcional)</label>
+      <input type="text" name="motivo_general" class="form-control" maxlength="255" placeholder="Ej. Producto con defecto de fábrica">
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Producto</th>
+            <th class="text-end">Vendido</th>
+            <th class="text-end">Máx. devolvible</th>
+            <th style="width:170px;">Cantidad a devolver</th>
+            <th>Detalle (motivo por producto)</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyItems">
+          <% if (detalles && detalles.length) { %>
+            <% detalles.forEach((it, idx) => { %>
+              <tr class="dv-item">
+                <td>
+                  <div class="fw-semibold"><%= it.product_nombre %></div>
+                  <small class="text-muted">ID: <%= it.product_id %></small>
+                  <input type="hidden" name="items[<%= idx %>][product_id]" value="<%= it.product_id %>">
+                </td>
+                <td class="text-end"><%= Number(it.cantidad).toFixed(2) %></td>
+                <td class="text-end"><span class="text-muted"><%= Number(it.maxDevolvible).toFixed(2) %></span></td>
+                <td>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm qty"
+                    name="items[<%= idx %>][cantidad]"
+                    min="0"
+                    step="1"
+                    max="<%= Number(it.maxDevolvible) %>"
+                    value="0"
+                    <%= Number(it.maxDevolvible) === 0 ? 'disabled' : '' %>
+                  >
+                </td>
+                <td>
+                  <input type="text"
+                         class="form-control form-control-sm"
+                         name="items[<%= idx %>][detalle]"
+                         maxlength="500"
+                         placeholder="Ej. Llegó quebrada / no enciende / pieza faltante">
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="5" class="text-center text-muted py-3">No hay líneas para devolver.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" href="/devoluciones-ventas">Cancelar</a>
+      <button class="btn btn-primary">
+        <i class="fa fa-save"></i> Guardar devolución
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('frmNuevaDV');
+  form.addEventListener('submit', function(ev) {
+    const rows = form.querySelectorAll('tr.dv-item');
+    let totalSeleccionados = 0;
+    for (const row of rows) {
+      const qty = row.querySelector('input.qty');
+      if (!qty || qty.disabled) continue;
+      const max = Number(qty.getAttribute('max') || 0);
+      const val = Number(qty.value || 0);
+
+      if (val > max) {
+        ev.preventDefault();
+        alert('Una cantidad supera el máximo devolvible.');
+        qty.focus();
+        return;
+      }
+      if (val <= 0) {
+        // Deshabilitar inputs de esta fila para que no viajen al backend
+        row.querySelectorAll('input').forEach(i => i.disabled = true);
+      } else {
+        totalSeleccionados++;
+      }
+    }
+    if (totalSeleccionados === 0) {
+      ev.preventDefault();
+      alert('Debes seleccionar al menos un producto con cantidad > 0.');
+    }
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>

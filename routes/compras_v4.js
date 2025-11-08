@@ -105,18 +105,27 @@ router.get('/api/catalog', isAuth, async (req, res, next) => {
     if (bod) params.push(bod);
 
     let sql = `
-      SELECT p.id, p.nombre, p.imagen,
-             ${precioSelect} AS precio,
-             ${stockSelect}   AS stock
-        FROM products p
-       WHERE p.clase='PRODUCTO'
-    `;
+  SELECT p.id, p.nombre, p.imagen, p.clase,     -- ← incluimos la clase
+         ${precioSelect} AS precio,
+         ${stockSelect}   AS stock
+    FROM products p
+   WHERE 1=1                                    -- ← sin filtro por clase
+`;
     if (q) { sql += ' AND p.nombre LIKE ?'; params.push(`%${q}%`); }
     sql += ' ORDER BY p.nombre ASC LIMIT 300';
-
     const [rows] = await pool.query(sql, params);
     rows.forEach(r => { if (!r.imagen) r.imagen = '/img/products/noimg.png'; });
-    res.json({ ok:true, items: rows });
+    res.json({
+  ok: true,
+  items: rows.map(r => ({
+    id: r.id,
+    nombre: r.nombre,
+    imagen: r.imagen,
+    precio: r.precio,
+    stock:  r.stock,
+    clase:  r.clase        // ← útil si luego quieres marcar “INSUMO”
+  }))
+});
   } catch (e) { next(e); }
 });
 
@@ -140,7 +149,7 @@ router.post('/', isAuth, async (req, res, next) => {
     // Normalizar y total
     let total = 0;
     for (const it of items) {
-      it.clase           = 'PRODUCTO'; // este flujo solo compra PRODUCTO
+
       it.item_id         = Number(it.item_id);
       it.cantidad        = Number(it.cantidad || 0);
       it.precio_unitario = Number(it.precio_unitario || 0);

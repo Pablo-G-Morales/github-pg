@@ -23,7 +23,7 @@ router.get('/', (req, res) => {
       ? res.redirect('/usuarios')
       : res.redirect('/dashboard');
   }
-  res.render('login', { error: null });
+  return res.render('login', { error: null });
 });
 
 /* ---------- Procesar login ---------- */
@@ -75,8 +75,23 @@ router.get('/logout', (req, res) => {
 });
 
 /* ---------- Dashboard ---------- */
-router.get('/dashboard', isAuth, (req, res) => {
-  res.render('dashboard', { user: req.session.user });
+router.get('/dashboard', isAuth, async (req, res, next) => {
+  try {
+    // Cargar imágenes activas para la sección "Novedades"
+    const [banners] = await pool.query(`
+      SELECT titulo, image_path
+        FROM dashboard_images
+       WHERE is_active = 1
+       ORDER BY sort_order DESC, id DESC
+    `);
+
+    return res.render('dashboard', {
+      user: req.session.user,
+      banners
+    });
+  } catch (e) {
+    return next(e);
+  }
 });
 
 module.exports = router;

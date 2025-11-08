@@ -1,0 +1,168 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <div class="d-flex gap-2">
+      <a href="/pedidos/autorizar/lista" class="btn btn-outline-secondary">
+        <i class="fa fa-arrow-left"></i> Volver a lista
+      </a>
+      <a href="/pedidos/<%= pedido.id %>/recibo" target="_blank" class="btn btn-outline-primary">
+        <i class="fa fa-print"></i> Recibo
+      </a>
+    </div>
+  </div>
+
+  <!-- Mensaje de error (si aplica) -->
+  <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+    <div class="alert alert-danger"><%= errorMsg %></div>
+  <% } %>
+
+  <!-- Encabezado -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="text-muted">Pedido:</div>
+          <div class="fw-semibold">#<%= pedido.id %></div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-muted">Bodega:</div>
+          <div class="fw-semibold"><%= pedido.bodega_nombre || '—' %></div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-muted">Estado actual:</div>
+          <span class="badge <%= pedido.estado==='COMPLETADO' ? 'bg-success' : (pedido.estado==='AUTORIZADO' ? 'bg-primary' : 'bg-warning text-dark') %>">
+            <%= pedido.estado || '—' %>
+          </span>
+        </div>
+
+        <div class="col-md-3">
+          <div class="text-muted">Fecha:</div>
+          <div class="fw-semibold">
+            <%= pedido.created_at ? new Date(pedido.created_at).toLocaleString('es-GT', { hour12:true }) : '—' %>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-muted">Departamento:</div>
+          <div class="fw-semibold"><%= pedido.departamento_nombre || '—' %></div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-muted">Municipio:</div>
+          <div class="fw-semibold"><%= pedido.municipio_nombre || '—' %></div>
+        </div>
+        <div class="col-md-3">
+          <div class="text-muted">Total:</div>
+          <div class="fw-semibold">Q <%= Number(pedido.total || totalCalc || 0).toFixed(2) %></div>
+        </div>
+
+        <div class="col-12">
+          <div class="text-muted">Dirección:</div>
+          <div><%= pedido._direccion || pedido.direccion_envio || pedido.direccion || '—' %></div>
+        </div>
+        <div class="col-12">
+          <div class="text-muted">Notas:</div>
+          <div><%= pedido.notas || '—' %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalle de productos -->
+  <div class="card mb-3">
+    <div class="card-header fw-semibold">Productos</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover m-0">
+          <thead class="table-dark">
+            <tr>
+              <th style="width:60px">#</th>
+              <th>Producto</th>
+              <th class="text-end" style="width:140px">Cantidad</th>
+              <th class="text-end" style="width:140px">Precio</th>
+              <th class="text-end" style="width:160px">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!detalles || detalles.length === 0) { %>
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted">Sin productos en este pedido.</td>
+              </tr>
+            <% } %>
+            <% (detalles || []).forEach((d, i) => { %>
+              <tr>
+                <td><%= i+1 %></td>
+                <td><%= d.producto_nombre || ('#' + d.producto_id) %></td>
+                <td class="text-end"><%= Number(d.cantidad||0) %></td>
+                <td class="text-end">Q <%= Number(d.precio_unitario||0).toFixed(2) %></td>
+                <td class="text-end">Q <%= Number(d.subtotal || (Number(d.cantidad||0)*Number(d.precio_unitario||0))).toFixed(2) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end">Total</th>
+              <th class="text-end">Q <%= Number(totalCalc || pedido.total || 0).toFixed(2) %></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de completar -->
+  <form action="/pedidos/autorizar/<%= pedido.id %>/completar" method="post">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Datos de finalización</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Forma de pago</label>
+            <select name="forma_pago_id" class="form-select">
+              <option value="">— Seleccionar —</option>
+              <% (formasPago||[]).forEach(fp => { %>
+                <option value="<%= fp.id %>" <%= Number((selected&&selected.forma_pago_id)||0)===Number(fp.id) ? 'selected' : '' %>><%= fp.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Condición de pago</label>
+            <select name="condicion_pago_id" class="form-select">
+              <option value="">— Seleccionar —</option>
+              <% (condicionesPago||[]).forEach(cp => { %>
+                <option value="<%= cp.id %>" <%= Number((selected&&selected.condicion_pago_id)||0)===Number(cp.id) ? 'selected' : '' %>><%= cp.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Tipo de documento</label>
+            <select name="tipo_documento_id" class="form-select">
+              <option value="">— Seleccionar —</option>
+              <% (tiposDocumento||[]).forEach(td => { %>
+                <option value="<%= td.id %>" <%= Number((selected&&selected.tipo_documento_id)||0)===Number(td.id) ? 'selected' : '' %>><%= td.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <div class="alert alert-info mb-0">
+              Al <strong>Completar</strong> este pedido se <strong>descontará stock</strong> de la bodega asignada.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <a href="/pedidos/autorizar/lista" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success">
+          <i class="fa fa-check-circle"></i> Completar pedido
+        </button>
+      </div>
+    </div>
+  </form>
+
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,91 @@
+<%- include('../partials/header', { title: 'Pedidos' }) %>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Pedidos</h2>
+    <div class="d-flex gap-2">
+      <a href="/pedidos/autorizar/lista" class="btn btn-outline-primary">
+        <i class="fa fa-clipboard-check"></i> Autorizar / completar
+      </a>
+      <a href="/pedidos/nuevo" class="btn btn-success">
+        <i class="fa fa-plus"></i> Nuevo pedido
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table id="tblPedidos" class="table table-sm table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Bodega</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th class="text-end">Total (Q)</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (pedidos || []).forEach(p => { 
+             const cliente = (p.nom_nuevo && p.nom_nuevo.trim()) ? p.nom_nuevo : 'Consumidor final';
+        %>
+          <tr>
+            <td><%= p.id %></td>
+            <td>
+              <div class="fw-semibold"><%= cliente %></div>
+              <% if (p.tel_nuevo) { %>
+                <small class="text-muted">Tel: <%= p.tel_nuevo %></small>
+              <% } %>
+            </td>
+            <td><%= p.bodega_nombre || '—' %></td>
+            <td><%= p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleString('es-GT', { hour12: true }) : '—' %></td>
+            <td>
+              <% const cls =
+                p.estado === 'COMPLETADO' ? 'bg-success' :
+                p.estado === 'EN_PROCESO' ? 'bg-info' :
+                p.estado === 'ANULADO' ? 'bg-danger' : 'bg-secondary'; %>
+              <span class="badge <%= cls %>"><%= p.estado %></span>
+            </td>
+            <td class="text-end fw-semibold"><%= Number(p.total || 0).toFixed(2) %></td>
+            <td class="text-nowrap">
+              <a class="btn btn-sm btn-outline-dark" href="/pedidos/<%= p.id %>" title="Ver" aria-label="Ver pedido <%= p.id %>">
+                Ver <i class="fa fa-eye"></i>
+              </a>
+              <a class="btn btn-sm btn-outline-secondary" href="/pedidos/<%= p.id %>/recibo" target="_blank" title="Imprimir" aria-label="Imprimir recibo del pedido <%= p.id %>">
+                Recibo <i class="fa fa-print"></i>
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+  $(function () {
+    $('#tblPedidos').DataTable({
+      pageLength: 10,
+      order: [[0, 'desc']],
+      columnDefs: [{ targets: [6], orderable: false }],
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+        // Personalización puntual (opcional)
+        paginate: { previous: 'Anterior', next: 'Siguiente' },
+        search: 'Buscar:',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ pedidos',
+        infoEmpty: 'Mostrando 0 a 0 de 0 pedidos',
+        zeroRecords: 'No se encontraron resultados',
+        loadingRecords: 'Cargando...',
+        processing: 'Procesando...'
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

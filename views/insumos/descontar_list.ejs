@@ -1,0 +1,32 @@
+<%- include('../partials/header', { title: 'Descontar insumos' }) %>
+
+<div class="container py-4">
+  
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h4 m-0">Descontar insumos</h2>
+    <a href="/compras-v4" class="btn btn-outline-secondary">Ir a compras</a>
+  </div>
+
+  <% if (!items || !items.length) { %>
+    <div class="alert alert-info">No hay insumos registrados.</div>
+  <% } else { %>
+
+  <div class="row g-3">
+    <% items.forEach(it => { %>
+      <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="card h-100 shadow-sm">
+          <img src="<%= it.imagen %>" class="card-img-top" alt="<%= it.nombre %>" style="object-fit:cover; height:180px;">
+          <div class="card-body">
+            <h6 class="card-title mb-1"><%= it.nombre %></h6>
+            <div class="text-muted small mb-2">Stock total: <strong><%= Number(it.stock_total||0).toFixed(2) %></strong></div>
+            <a class="btn btn-primary btn-sm w-100" href="/insumos/descontar/<%= it.id %>">
+              Descontar
+            </a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+
+  <% } %>
+</div>

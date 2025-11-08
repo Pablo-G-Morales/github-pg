@@ -1,0 +1,237 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><i class="fa fa-chart-line"></i> <%= title %></h2>
+    <a href="/ventas" class="btn btn-outline-secondary">
+      <i class="fa fa-arrow-left"></i> Volver a ventas
+    </a>
+  </div>
+
+  <!-- KPIs rápidos -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted">Pedidos completados</div>
+          <div class="display-6"><%= resumen.pedidos %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted">Monto total</div>
+          <div class="display-6">Q <%= Number(resumen.monto || 0).toFixed(2) %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-stretch">
+      <div class="card shadow-sm w-100">
+        <div class="card-body d-flex flex-column">
+          <div class="text-muted mb-2">Acciones</div>
+          <a href="/ventas" class="btn btn-primary mt-auto">
+            <i class="fa fa-list"></i> Ver listado
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles del gráfico -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">Tipo de gráfico</label>
+          <select id="tipoGraf" class="form-select form-select-sm">
+            <option value="line">Lineal</option>
+            <option value="pie">Circular</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">Agrupar por</label>
+          <select id="dimension" class="form-select form-select-sm">
+            <option value="mes">Mes</option>
+            <option value="anio">Año</option>
+            <option value="cliente">Cliente</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-3" id="wrapAnio">
+          <label class="form-label mb-1">Año</label>
+          <select id="selAnio" class="form-select form-select-sm">
+            <% (years || []).forEach(y => { %>
+              <option value="<%= y.y %>" <%= (Number(chartData.year)===Number(y.y))?'selected':'' %>><%= y.y %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-auto d-flex gap-2 flex-wrap">
+          <button id="btnRedibujar" class="btn btn-sm btn-primary">
+            <i class="fa fa-sync"></i> Actualizar
+          </button>
+          <button id="btnCompacto" class="btn btn-sm btn-outline-secondary">
+            <i class="fa fa-compress-alt"></i> Compacto
+          </button>
+          <button id="btnNormal" class="btn btn-sm btn-outline-secondary">
+            <i class="fa fa-expand-alt"></i> Normal
+          </button>
+          <button id="btnDescargar" class="btn btn-sm btn-outline-secondary ms-auto">
+            <i class="fa fa-download"></i> PNG
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lienzo del gráfico -->
+  <div class="card">
+    <div class="card-body">
+      <div id="chartWrap" style="height: 480px;">
+        <canvas id="ventasChart"></canvas>
+      </div>
+      <div class="text-muted small mt-2" id="notaFuente">
+        * Monto en Quetzales (Q). Las ventas por cliente muestran el TOP 10.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+// ==== Datos inyectados desde el servidor ====
+const CHART_DATA = {
+  year: <%- JSON.stringify(chartData.year) %>,
+  porMes: <%- JSON.stringify(chartData.porMes) %>,
+  labelsAnio: <%- JSON.stringify(chartData.labelsAnio) %>,
+  dataAnio:   <%- JSON.stringify(chartData.dataAnio) %>,
+  labelsCliente: <%- JSON.stringify(chartData.labelsCliente) %>,
+  dataCliente:   <%- JSON.stringify(chartData.dataCliente) %>
+};
+
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+(function(){
+  const ctx = document.getElementById('ventasChart').getContext('2d');
+  const chartWrap = document.getElementById('chartWrap');
+  const $tipo = document.getElementById('tipoGraf');
+  const $dim  = document.getElementById('dimension');
+  const $anio = document.getElementById('selAnio');
+  const $wrapAnio = document.getElementById('wrapAnio');
+
+  const HEIGHT_NORMAL  = 480;  // px
+  const HEIGHT_COMPACT = 280;  // px
+
+  function defaultState(){
+    $tipo.value = 'line';
+    $dim.value  = 'mes';
+    toggleYear(true);
+    setHeight(HEIGHT_NORMAL);
+  }
+
+  function toggleYear(show){
+    $wrapAnio.style.display = show ? '' : 'none';
+  }
+
+  function setHeight(h){
+    chartWrap.style.height = h + 'px';
+    if (chart) chart.resize();
+  }
+
+  function buildData(){
+    const tipo = $tipo.value;
+    const dim  = $dim.value;
+    toggleYear(dim === 'mes');
+
+    let labels = [];
+    let data = [];
+    let title = '';
+
+    if (dim === 'mes') {
+      labels = MESES.slice();
+      data   = CHART_DATA.porMes.slice();
+      title  = `Ventas por mes (${CHART_DATA.year})`;
+    } else if (dim === 'anio') {
+      labels = CHART_DATA.labelsAnio.slice();
+      data   = CHART_DATA.dataAnio.slice();
+      title  = 'Ventas por año';
+    } else if (dim === 'cliente') {
+      labels = CHART_DATA.labelsCliente.slice();
+      data   = CHART_DATA.dataCliente.slice();
+      title  = 'Ventas por cliente (TOP 10)';
+    }
+
+    return { tipo, labels, data, title };
+  }
+
+  let chart = null;
+
+  function render(){
+    const { tipo, labels, data, title } = buildData();
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+      type: tipo,
+      data: {
+        labels,
+        datasets: [{
+          label: 'Ventas (Q)',
+          data,
+          tension: 0.25
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: { display: true, text: title },
+          legend: { display: tipo !== 'line' }
+        },
+        scales: (tipo === 'line') ? { y: { beginAtZero: true } } : {}
+      }
+    });
+  }
+
+  // Descargar PNG
+  document.getElementById('btnDescargar').addEventListener('click', () => {
+    if (!chart) return;
+    const a = document.createElement('a');
+    a.href = chart.toBase64Image();
+    a.download = 'estadisticas-ventas.png';
+    a.click();
+  });
+
+  // Redibujar o recargar si cambia el año en "mes"
+  document.getElementById('btnRedibujar').addEventListener('click', () => {
+    if ($dim.value === 'mes') {
+      const selected = $anio.value;
+      if (String(selected) !== String(CHART_DATA.year)) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('year', selected);
+        window.location.href = url.toString();
+        return;
+      }
+    }
+    render();
+  });
+
+  // Compacto / Normal
+  document.getElementById('btnCompacto').addEventListener('click', () => setHeight(HEIGHT_COMPACT));
+  document.getElementById('btnNormal').addEventListener('click', () => setHeight(HEIGHT_NORMAL));
+
+  // Cambios de controles → render al vuelo (salvo cambio de año)
+  $tipo.addEventListener('change', render);
+  $dim.addEventListener('change', render);
+
+  // init
+  defaultState();
+  render();
+
+  // Reflow al redimensionar
+  window.addEventListener('resize', () => { if (chart) chart.resize(); });
+})();
+</script>
+
+<%- include('../partials/footer') %>

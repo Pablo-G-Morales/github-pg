@@ -1,0 +1,26 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <div class="d-flex gap-2">
+      <a href="/pedidos/municipios" class="btn btn-secondary">Volver</a>
+      <a href="/pedidos/municipios/<%= muni.id %>/editar" class="btn btn-primary">Editar</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <p><strong>ID:</strong> <%= muni.id %></p>
+      <p><strong>Departamento:</strong> <%= muni.departamento_nombre %></p>
+      <p><strong>Municipio:</strong> <%= muni.nombre %></p>
+      <hr>
+      <p><strong>Creado por:</strong> <%= muni.creado_por_nombre || '—' %></p>
+      <p><strong>Creado en:</strong> <%= muni.creado_en ? new Date(muni.creado_en).toLocaleString() : '—' %></p>
+      <p><strong>Actualizado por:</strong> <%= muni.actualizado_por_nombre || '—' %></p>
+      <p><strong>Actualizado en:</strong> <%= muni.actualizado_en ? new Date(muni.actualizado_en).toLocaleString() : '—' %></p>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

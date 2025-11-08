@@ -18,17 +18,15 @@
       <tr>
         <th>ID</th>
         <th>Producto</th>
-        <th class="text-end">Stock&nbsp;total</th>
         <th class="text-end">Últ. costo&nbsp;(Q)</th>
         <th class="text-center">Acciones</th>
       </tr>
     </thead>
     <tbody>
-      <% productos.forEach(p => { %>
+      <% (productos || []).forEach(p => { %>
         <tr>
           <td><%= p.id %></td>
           <td><%= p.nombre %></td>
-          <td class="text-end"><%= p.stock_total %></td>
           <td class="text-end">
             <%= p.ultimo_compra !== null ? (+p.ultimo_compra).toFixed(2) : '—' %>
           </td>
@@ -37,14 +35,16 @@
             <!-- Ver ficha (bodegas + precios) -->
             <a href="/inventario/productos/<%= p.id %>/inventario"
                class="btn btn-sm btn-primary me-1"
-               title="Ver inventario">
+               title="Ver inventario"
+               aria-label="Ver inventario del producto <%= p.nombre %>">
               <i class="fa fa-eye"></i>
             </a>
 
             <!-- Añadir / actualizar inventario -->
             <a href="/inventario/productos/<%= p.id %>/inventario/nuevo"
                class="btn btn-sm btn-success"
-               title="Agregar / editar inventario">
+               title="Agregar / editar inventario"
+               aria-label="Agregar o editar inventario del producto <%= p.nombre %>">
               <i class="fa fa-plus"></i>
             </a>
 
@@ -54,7 +54,7 @@
     </tbody>
   </table>
 
-  <a href="/inventario/productos/nuevo" class="btn btn-success mt-3">
+  <a href="/inventario/productos/nuevo" class="btn btn-success mt-3 me-2">
     <i class="fa fa-plus"></i> Nuevo producto
   </a>
   <a href="/inventario" class="btn btn-secondary mt-3">
@@ -65,9 +65,25 @@
 <script>
   $(function () {
     $('#tblStock').DataTable({
-      language : { url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json' },
-      order    : [[1,'asc']],
-      pageLength: 10
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
+        // Personalización puntual (opcional):
+        paginate: { previous: 'Anterior', next: 'Siguiente' },
+        search: 'Buscar:',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ productos',
+        infoEmpty: 'Mostrando 0 a 0 de 0 productos',
+        zeroRecords: 'No se encontraron resultados',
+        loadingRecords: 'Cargando...',
+        processing: 'Procesando...'
+      },
+      order     : [[1, 'asc']],          // Ordenar por "Producto"
+      pageLength: 10,
+      columnDefs: [
+        { targets: [3], orderable: false }, // "Acciones" sin orden
+        { targets: [2], className: 'text-end' }, // Asegurar alineación del costo
+        { targets: [3], className: 'text-center' } // Asegurar centrado de acciones
+      ]
     });
   });
 </script>

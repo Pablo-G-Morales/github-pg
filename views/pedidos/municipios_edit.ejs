@@ -1,0 +1,29 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <h2 class="h4 mb-3"><%= title %></h2>
+
+  <form method="post" action="/pedidos/municipios/<%= muni.id %>/editar" class="card p-3">
+    <div class="mb-3">
+      <label class="form-label">Departamento</label>
+      <select name="departamento_id" class="form-select" required>
+        <option value="">— Seleccionar —</option>
+        <% (departamentos||[]).forEach(d => { %>
+          <option value="<%= d.id %>" <%= d.id===muni.departamento_id ? 'selected':'' %>><%= d.nombre %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Nombre del municipio</label>
+      <input name="nombre" class="form-control" required maxlength="120" value="<%= muni.nombre %>">
+    </div>
+
+    <div class="text-end">
+      <a href="/pedidos/municipios/<%= muni.id %>" class="btn btn-secondary">Cancelar</a>
+      <button class="btn btn-primary"><i class="fa fa-save"></i> Actualizar</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

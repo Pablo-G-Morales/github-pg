@@ -1,0 +1,67 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 m-0"><i class="fa fa-file-pdf"></i> <%= title %></h2>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="/pedidos/<%= pedidoId %>">
+        <i class="fa fa-arrow-left"></i> Volver al pedido
+      </a>
+      <a class="btn btn-primary" href="/pedidos/<%= pedidoId %>/diseno" target="_blank" rel="noopener">
+        <i class="fa fa-external-link-alt"></i> Abrir archivo
+      </a>
+      <a class="btn btn-outline-success" href="<%= fileUrl %>" target="_blank" rel="noopener">
+        <i class="fa fa-download"></i> Abrir en pestaña
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-2">
+      <!-- Contenedor alto para visor -->
+      <div id="visorWrap" style="height: 80vh;">
+        <!--
+          Usamos iframe: los PDF se renderizan inline en la mayoría de navegadores.
+          Agregamos parámetros típicos para UX: ocultar panel lateral, ajustar al ancho, mostrar toolbar.
+        -->
+        <iframe
+          id="visorFrame"
+          src="<%= fileUrl %>#toolbar=1&navpanes=0&scrollbar=1&view=FitH"
+          style="border:0; width:100%; height:100%;"
+          title="Diseño PDF/Imagen">
+        </iframe>
+      </div>
+
+      <div class="d-flex gap-2 mt-2">
+        <button class="btn btn-sm btn-outline-secondary" id="btnCompacto">
+          <i class="fa fa-compress-alt"></i> Compacto
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" id="btnNormal">
+          <i class="fa fa-expand-alt"></i> Normal
+        </button>
+      </div>
+
+      <div class="text-muted small mt-2">
+        * Si el PDF no se muestra, tu navegador o extensión puede bloquear visores embebidos.
+        Prueba el botón “Abrir archivo” o “Abrir en pestaña”.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const wrap = document.getElementById('visorWrap');
+  const H_COMPACT = 480;
+  const H_NORMAL  = Math.round(window.innerHeight * 0.8);
+
+  document.getElementById('btnCompacto')?.addEventListener('click', () => {
+    wrap.style.height = H_COMPACT + 'px';
+  });
+  document.getElementById('btnNormal')?.addEventListener('click', () => {
+    wrap.style.height = H_NORMAL + 'px';
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>

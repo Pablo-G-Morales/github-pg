@@ -1,0 +1,213 @@
+<%- include('../partials/header', { title }) %>
+
+<%
+// Helper para construir querystrings preservando filtros
+function qs(override) {
+  const o = {
+    page: filtros.page, size: filtros.size,
+    year: filtros.year, month: filtros.month,
+    bodega_id: filtros.bodega_id,
+    cliente: filtros.cliente, q: filtros.q
+  };
+  Object.assign(o, override || {});
+  const parts = [];
+  for (const k in o) {
+    const v = o[k];
+    // omitimos "vacíos" (0 o string vacío) para URLs limpias
+    if (v !== undefined && v !== null && v !== '' && !(typeof v === 'number' && v === 0)) {
+      parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(v));
+    }
+  }
+  return parts.length ? ('?' + parts.join('&')) : '';
+}
+%>
+
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h2 class="h4 m-0"><i class="fa fa-shopping-bag"></i> Ventas (Pedidos completados)</h2>
+    <div class="d-flex gap-2">
+      <a href="/ventas/estadisticas" class="btn btn-outline-info">
+        <i class="fa fa-chart-line"></i> Estadísticas
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <form class="card mb-3" method="get" action="/ventas">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">Año</label>
+          <select name="year" class="form-select form-select-sm">
+            <option value="0">Todos</option>
+            <% (years || []).forEach(y => { %>
+              <option value="<%= y.y %>" <%= (Number(filtros.year)===Number(y.y))?'selected':'' %>><%= y.y %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">Mes</label>
+          <select name="month" class="form-select form-select-sm">
+            <option value="0">Todos</option>
+            <% const meses=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']; %>
+            <% for (let m=1; m<=12; m++) { %>
+              <option value="<%= m %>" <%= (Number(filtros.month)===m)?'selected':'' %>><%= meses[m] %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">Bodega</label>
+          <select name="bodega_id" class="form-select form-select-sm">
+            <option value="0">Todas</option>
+            <% (bodegas || []).forEach(b => { %>
+              <option value="<%= b.id %>" <%= (Number(filtros.bodega_id)===Number(b.id))?'selected':'' %>><%= b.nombre %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">Cliente</label>
+          <input name="cliente" class="form-control form-control-sm" value="<%= filtros.cliente || '' %>" placeholder="Nombre del cliente">
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label mb-1">Tamaño página</label>
+          <select name="size" class="form-select form-select-sm">
+            <% [10,25,50,100].forEach(s => { %>
+              <option value="<%= s %>" <%= (Number(filtros.size)===s)?'selected':'' %>><%= s %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label mb-1">Buscar (ID, nombre, teléfono)</label>
+          <input name="q" class="form-control form-control-sm" value="<%= filtros.q || '' %>" placeholder="Texto libre">
+        </div>
+        <div class="col-12 col-md-6 d-flex align-items-end justify-content-end gap-2">
+          <a href="/ventas" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+          <button class="btn btn-primary btn-sm">
+            <i class="fa fa-filter"></i> Aplicar
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Resumen -->
+  <div class="alert alert-light border d-flex justify-content-between align-items-center">
+    <div>
+      <strong><%= resumen.totalRows %></strong> resultados
+      · Monto total: <strong>Q <%= resumen.suma.toFixed(2) %></strong>
+    </div>
+    <div> Página <strong><%= filtros.page %></strong> de <strong><%= resumen.totalPages %></strong> </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>Bodega</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (pedidos && pedidos.length) { %>
+              <% pedidos.forEach(p => { %>
+                <tr>
+                  <td>#<%= p.id %></td>
+                  <td><%= new Date(p.created_at).toLocaleString() %></td>
+                  <td><%= p.nom_nuevo || 'Consumidor final' %></td>
+                  <td><%= p.tel_nuevo || '—' %></td>
+                  <td><%= p.bodega_nombre || ('#'+p.bodega_id) %></td>
+                  <td class="text-end">Q <%= Number(p.total || 0).toFixed(2) %></td>
+                  <td class="text-end">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary btn-ficha"
+                      data-url="/pedidos/<%= p.id %>"
+                      data-pedido="<%= p.id %>"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalFichaPedido">
+                      <i class="fa fa-eye"></i> Ficha
+                    </button>
+                    <a class="btn btn-sm btn-outline-primary" href="/pedidos/<%= p.id %>/recibo" target="_blank" rel="noopener">
+                      <i class="fa fa-receipt"></i> Recibo
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="7" class="text-center text-muted py-4">No hay pedidos que coincidan con los filtros.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <div class="small text-muted">
+          Página <strong><%= filtros.page %></strong> de <strong><%= resumen.totalPages %></strong>
+        </div>
+        <div class="btn-group">
+          <% const prevPage = Math.max(1, Number(filtros.page) - 1); %>
+          <% const nextPage = Math.min(Number(resumen.totalPages), Number(filtros.page) + 1); %>
+
+          <a class="btn btn-sm btn-outline-secondary <%= (filtros.page<=1)?'disabled':'' %>"
+             href="/ventas<%= qs({ page: 1 }) %>">&laquo; Primero</a>
+          <a class="btn btn-sm btn-outline-secondary <%= (filtros.page<=1)?'disabled':'' %>"
+             href="/ventas<%= qs({ page: prevPage }) %>">Anterior</a>
+          <a class="btn btn-sm btn-outline-secondary <%= (filtros.page>=resumen.totalPages)?'disabled':'' %>"
+             href="/ventas<%= qs({ page: nextPage }) %>">Siguiente</a>
+          <a class="btn btn-sm btn-outline-secondary <%= (filtros.page>=resumen.totalPages)?'disabled':'' %>"
+             href="/ventas<%= qs({ page: resumen.totalPages }) %>">Último &raquo;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ficha de Pedido -->
+<div class="modal fade" id="modalFichaPedido" tabindex="-1" aria-labelledby="modalFichaPedidoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fa fa-file-invoice"></i> Ficha del pedido
+          <span id="modalPedidoId" class="text-muted"></span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-0">
+        <iframe id="iframeFicha" src="about:blank" style="border:0;width:100%;height:75vh;"></iframe>
+      </div>
+      <div class="modal-footer">
+        <a id="linkAbrirNueva" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
+          <i class="fa fa-external-link-alt"></i> Abrir en nueva pestaña
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Modal de ficha
+  document.querySelectorAll('.btn-ficha').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = btn.getAttribute('data-url');
+      const pid = btn.getAttribute('data-pedido');
+      document.getElementById('iframeFicha').src = url;
+      document.getElementById('modalPedidoId').textContent = `#${pid}`;
+      document.getElementById('linkAbrirNueva').href = url;
+    });
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>

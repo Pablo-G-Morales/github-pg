@@ -1,0 +1,25 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><%= title %></h2>
+    <div class="d-flex gap-2">
+      <a href="/pedidos/departamentos" class="btn btn-secondary">Volver</a>
+      <a href="/pedidos/departamentos/<%= dep.id %>/editar" class="btn btn-primary">Editar</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <p><strong>ID:</strong> <%= dep.id %></p>
+      <p><strong>Nombre:</strong> <%= dep.nombre %></p>
+      <hr>
+      <p><strong>Creado por:</strong> <%= dep.creado_por_nombre || '—' %></p>
+      <p><strong>Creado en:</strong> <%= dep.creado_en ? new Date(dep.creado_en).toLocaleString() : '—' %></p>
+      <p><strong>Actualizado por:</strong> <%= dep.actualizado_por_nombre || '—' %></p>
+      <p><strong>Actualizado en:</strong> <%= dep.actualizado_en ? new Date(dep.actualizado_en).toLocaleString() : '—' %></p>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

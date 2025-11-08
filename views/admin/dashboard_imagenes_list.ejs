@@ -1,0 +1,62 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0">Imágenes del Dashboard</h2>
+    <a href="/admin/dashboard-imagenes/nueva" class="btn btn-primary">
+      <i class="fa fa-plus"></i> Nueva imagen
+    </a>
+  </div>
+
+  <% if (!items || !items.length) { %>
+    <div class="alert alert-info">No hay imágenes registradas.</div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th style="width:80px;">Vista</th>
+            <th>Título</th>
+            <th>Orden</th>
+            <th>Activa</th>
+            <th>Creada</th>
+            <th style="width:170px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(it => { %>
+            <tr>
+              <td>
+                <img src="<%= it.image_path %>" alt="img" style="height:56px; width:auto; object-fit:contain;">
+              </td>
+              <td><%= it.titulo || '-' %></td>
+              <td><%= it.sort_order %></td>
+              <td>
+                <% if (it.is_active) { %>
+                  <span class="badge bg-success">Activa</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">Inactiva</span>
+                <% } %>
+              </td>
+              <td class="text-muted small"><%= new Date(it.created_at).toLocaleString('es-GT') %></td>
+              <td class="text-end">
+                <form action="/admin/dashboard-imagenes/<%= it.id %>/toggle" method="post" class="d-inline">
+                  <button class="btn btn-sm btn-outline-warning">
+                    <i class="fa fa-power-off"></i> Activar/Desactivar
+                  </button>
+                </form>
+                <form action="/admin/dashboard-imagenes/<%= it.id %>/eliminar" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar esta imagen?');">
+                  <button class="btn btn-sm btn-outline-danger">
+                    <i class="fa fa-trash"></i> Eliminar
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

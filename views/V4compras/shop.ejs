@@ -2,9 +2,18 @@
 
 <section class="container py-4">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="h4 m-0">Nueva compra (Estilo tienda)</h2>
+    <h2 class="h4 m-0">Nueva compra</h2>
 
     <div class="d-flex gap-2">
+      <!-- Botones nuevos -->
+      <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCompras">
+        <i class="fa fa-receipt me-1"></i> Compras
+      </button>
+      <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalInventario">
+        <i class="fa fa-boxes-stacked me-1"></i> Inventario
+      </button>
+
+      <!-- Botón carrito existente -->
       <button id="btnCart" type="button" class="btn btn-outline-primary position-relative" data-bs-toggle="modal" data-bs-target="#cartModal">
         <i class="fa fa-shopping-cart me-1"></i> Carrito
         <span id="cartBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
@@ -101,6 +110,56 @@
     </div>
   </div>
 </section>
+
+<!-- Modal: Compras embebido -->
+<div class="modal fade" id="modalCompras" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-receipt me-2"></i>Compras</h5>
+        <div class="d-flex align-items-center gap-2">
+          <a class="btn btn-sm btn-outline-success" target="_blank" rel="noopener"
+             href="/compras1">Abrir en pestaña nueva</a>
+          <button class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+      </div>
+      <div class="modal-body p-0">
+        <div style="height:75vh">
+          <iframe id="iframeCompras" src="about:blank" style="width:100%;height:100%;border:0" title="Compras"></iframe>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted me-auto">Administre compras sin salir. Si necesita más espacio, use el enlace para abrir en una nueva pestaña.</small>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Inventario embebido -->
+<div class="modal fade" id="modalInventario" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa fa-boxes-stacked me-2"></i>Inventario</h5>
+        <div class="d-flex align-items-center gap-2">
+          <a class="btn btn-sm btn-outline-info" target="_blank" rel="noopener"
+             href="/inventario">Abrir en pestaña nueva</a>
+          <button class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+      </div>
+      <div class="modal-body p-0">
+        <div style="height:75vh">
+          <iframe id="iframeInventario" src="about:blank" style="width:100%;height:100%;border:0" title="Inventario"></iframe>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted me-auto">Revise o edite el inventario sin perder el contexto de esta compra.</small>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
   // --- Elementos ---
@@ -284,6 +343,36 @@
   window.chgQty    = chgQty;
   window.setQty    = setQty;
   window.delItem   = delItem;
+
+  // --- Iframes en modales (carga perezosa y limpieza) ---
+  (function(){
+    const comprasModal = document.getElementById('modalCompras');
+    const invModal     = document.getElementById('modalInventario');
+    const iframeCompras = document.getElementById('iframeCompras');
+    const iframeInv     = document.getElementById('iframeInventario');
+
+    const URL_COMPRAS   = 'http://localhost:3000/compras1';
+    const URL_INVENTARIO= 'http://localhost:3000/inventario';
+
+    comprasModal.addEventListener('show.bs.modal', ()=> {
+      if (!iframeCompras.src || iframeCompras.src === 'about:blank') iframeCompras.src = URL_COMPRAS;
+    });
+    comprasModal.addEventListener('hidden.bs.modal', ()=> {
+      // Si prefieres mantenerlo cargado, comenta la siguiente línea
+      iframeCompras.src = 'about:blank';
+    });
+
+    invModal.addEventListener('show.bs.modal', ()=> {
+      if (!iframeInv.src || iframeInv.src === 'about:blank') iframeInv.src = URL_INVENTARIO;
+    });
+    invModal.addEventListener('hidden.bs.modal', ()=> {
+      // Si prefieres mantenerlo cargado, comenta la siguiente línea
+      iframeInv.src = 'about:blank';
+    });
+  })();
 </script>
+
+<!-- Asegura Bootstrap JS para los modales (si no viene en header) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <%- include('../partials/footer') %>

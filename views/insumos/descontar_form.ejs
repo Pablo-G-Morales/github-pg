@@ -1,0 +1,133 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4" x-data>
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/insumos/descontar">Descontar insumos</a></li>
+      <li class="breadcrumb-item active" aria-current="page"><%= prod.nombre %></li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <img src="<%= prod.imagen %>" class="card-img-top" alt="<%= prod.nombre %>" style="object-fit:contain; height:260px;">
+        <div class="card-body">
+          <h5 class="card-title mb-0"><%= prod.nombre %></h5>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Aplicar descuento de stock</h5>
+
+          <form id="frmDesc" class="mt-2">
+            <input type="hidden" name="product_id" value="<%= prod.id %>">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Bodega</label>
+                <select class="form-select" name="warehouse_id" id="warehouse_id" required>
+                  <option value="" selected disabled>— Seleccione bodega —</option>
+                  <% porBodega.forEach(b => { %>
+                    <option value="<%= b.id %>" data-stock="<%= Number(b.stock||0) %>"><%= b.nombre %></option>
+                  <% }) %>
+                </select>
+                <div class="form-text">
+                  Stock en bodega seleccionada: <span id="lblStockSel" class="fw-bold">—</span>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Cantidad a descontar</label>
+                <input type="number" class="form-control" name="cantidad" id="cantidad"
+                       step="0.01" min="0.01" placeholder="Ej. 1.00" required>
+              </div>
+            </div>
+
+            <div class="alert alert-warning mt-3 mb-2 d-none" id="warnStock"></div>
+
+            <div class="d-flex gap-2 mt-3">
+              <button type="submit" class="btn btn-primary">Guardar descuento</button>
+              <a href="/insumos/descontar" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow-sm mt-3">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Stock por bodega</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:60%;">Bodega</th>
+                  <th class="text-end">Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% porBodega.forEach(b => { %>
+                  <tr>
+                    <td><%= b.nombre %></td>
+                    <td class="text-end"><%= Number(b.stock||0).toFixed(2) %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <small class="text-muted">* Esta tabla es solo informativa.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const sel = document.getElementById('warehouse_id');
+  const lbl = document.getElementById('lblStockSel');
+  const qty = document.getElementById('cantidad');
+  const warn = document.getElementById('warnStock');
+
+  function updateLabel() {
+    const opt = sel.options[sel.selectedIndex];
+    const stk = opt ? Number(opt.getAttribute('data-stock') || 0) : NaN;
+    lbl.textContent = isNaN(stk) ? '—' : stk.toFixed(2);
+    // hint preventivo
+    const q = Number(qty.value || 0);
+    if (!isNaN(stk) && q > 0 && q > stk) {
+      warn.textContent = `Aviso: intenta descontar ${q}, pero la bodega solo tiene ${stk}.`;
+      warn.classList.remove('d-none');
+    } else {
+      warn.classList.add('d-none');
+    }
+  }
+  sel?.addEventListener('change', updateLabel);
+  qty?.addEventListener('input', updateLabel);
+
+  const form = document.getElementById('frmDesc');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const productId = <%= prod.id %>;
+    const warehouse_id = sel.value;
+    const cantidad = qty.value;
+
+    const resp = await fetch(`/insumos/descontar/${productId}`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ warehouse_id, cantidad })
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    if (data?.ok) {
+      // Vuelve al listado o recarga el form
+      window.location.href = '/insumos/descontar';
+    } else {
+      alert(data?.message || 'No se pudo aplicar el descuento.');
+    }
+  });
+})();
+</script>

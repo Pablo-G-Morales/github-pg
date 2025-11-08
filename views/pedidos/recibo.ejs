@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Recibo Pedido #<%= pedido.id %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    *{ box-sizing:border-box; }
+    body{ font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; margin:0; padding:24px; color:#111; }
+    .wrap{ max-width:860px; margin:0 auto; }
+    header{ display:flex; align-items:center; gap:16px; border-bottom:2px solid #ddd; padding-bottom:12px; margin-bottom:16px; }
+    header img{ height:56px; }
+    h1{ font-size:20px; margin:0; }
+    .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:16px; }
+    .card{ border:1px solid #e5e5e5; border-radius:8px; padding:12px; }
+    .muted{ color:#666; font-size:12px; }
+    table{ width:100%; border-collapse:collapse; }
+    thead th{ text-align:left; background:#111; color:#fff; padding:8px; font-weight:600; }
+    tbody td{ border-bottom:1px solid #eee; padding:8px; }
+    tfoot th{ text-align:right; padding:8px; }
+    .right{ text-align:right; }
+    .actions{ margin: 16px 0 0; }
+    @media print { .actions { display:none; } body { padding:0; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="/img/logo.png" alt="SubliRex">
+      <div>
+        <h1>Recibo de Pedido #<%= pedido.id %></h1>
+        <div class="muted">Fecha: <%= pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleString('es-GT', { hour12:true }) : '—' %></div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- CLIENTE: solo nombre y teléfono -->
+      <div class="card">
+        <div><strong>Cliente</strong></div>
+        <div><%= (pedido.nom_nuevo && pedido.nom_nuevo.trim()) ? pedido.nom_nuevo : 'Consumidor final' %></div>
+        <% if (pedido.tel_nuevo) { %>
+          <div class="muted">Tel: <%= pedido.tel_nuevo %></div>
+        <% } %>
+      </div>
+
+      <!-- DIRECCIÓN DE ENTREGA: aquí va la dirección del cliente -->
+      <div class="card">
+        <div><strong>Dirección de entrega</strong></div>
+        <%
+          const dirCliente = pedido.direccion || pedido.direccion_envio;
+          const loc = [
+            (pedido.municipio_nombre || '').trim(),
+            (pedido.departamento_nombre || '').trim()
+          ].filter(Boolean).join(', ');
+        %>
+        <div><%= dirCliente || '—' %></div>
+        <% if (loc) { %>
+          <div class="muted"><%= loc %></div>
+        <% } %>
+        <% if (pedido.bodega_nombre) { %>
+
+        <% } %>
+      </div>
+
+      <!-- ESTADO / TOTAL -->
+      <div class="card">
+        <div><strong>Estado</strong></div>
+        <div><%= pedido.estado %></div>
+        <div class="muted">Total: Q <%= Number(pedido.total || 0).toFixed(2) %></div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:56px;">#</th>
+          <th>Producto</th>
+          <th class="right" style="width:120px;">Cantidad</th>
+          <th class="right" style="width:140px;">Precio Unit. (Q)</th>
+          <th class="right" style="width:140px;">Subtotal (Q)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if ((detalles || []).length === 0) { %>
+          <tr><td colspan="5" class="muted" style="text-align:center; padding:16px;">Sin productos</td></tr>
+        <% } else { %>
+          <% detalles.forEach((d, i) => { %>
+            <tr>
+              <td><%= i + 1 %></td>
+              <td><%= d.producto_nombre || ('#' + d.producto_id) %></td>
+              <td class="right"><%= Number(d.cantidad).toLocaleString('es-GT') %></td>
+              <td class="right"><%= Number(d.precio_unitario).toFixed(2) %></td>
+              <td class="right"><%= Number((+d.cantidad) * (+d.precio_unitario)).toFixed(2) %></td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4">Total</th>
+          <th class="right">Q <%= Number(pedido.total || 0).toFixed(2) %></th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="actions">
+      <button onclick="window.print()">Imprimir / Guardar PDF</button>
+    </div>
+  </div>
+</body>
+</html>

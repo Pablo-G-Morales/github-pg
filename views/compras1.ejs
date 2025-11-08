@@ -31,9 +31,6 @@
         Accesos rápidos para registrar compras, autorizar, devoluciones y administrar catálogos relacionados.
       </p>
     </div>
-    <a href="/" class="btn btn-outline-light">
-      <i class="fa fa-tachometer-alt"></i> Dashboard
-    </a>
   </header>
 
   <!-- TARJETAS DEL MENÚ -->
@@ -64,6 +61,7 @@
     <% } %>
 
     <!-- Facturas de compras (listado) -->
+         <% if (user && user.rol_id === 1) { %>
     <div class="col-6 col-md-3 d-flex justify-content-center">
       <div class="card card-cubo p-3 text-center d-flex flex-column align-items-center">
         <i class="fa-solid fa-file-invoice fa-2x mb-2"></i>
@@ -73,7 +71,7 @@
         <a href="/compras-v4/facturas" class="btn btn-sm mt-2 px-3">Ver</a>
       </div>
     </div>
-
+    <% } %>
     <!-- Devoluciones: elegir compra COMPLETADA (solo ADMIN) -->
     <% if (user && user.rol_id === 1) { %>
     <div class="col-6 col-md-3 d-flex justify-content-center">

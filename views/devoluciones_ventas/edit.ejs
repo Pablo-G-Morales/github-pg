@@ -1,0 +1,132 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 m-0"><i class="fa fa-edit"></i> <%= title %></h2>
+    <div class="d-flex gap-2">
+      <a class="btn btn-sm btn-outline-secondary" href="/devoluciones-ventas/<%= cab.id %>">
+        <i class="fa fa-eye"></i> Ver
+      </a>
+      <a class="btn btn-sm btn-outline-secondary" href="/devoluciones-ventas">
+        <i class="fa fa-list"></i> Listado
+      </a>
+    </div>
+  </div>
+
+  <!-- Info básica -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-sm-4"><strong>Devolución:</strong> #<%= cab.id %></div>
+        <div class="col-sm-4"><strong>Pedido:</strong> <a href="/pedidos/show/<%= cab.pedido_id %>">#<%= cab.pedido_id %></a></div>
+      </div>
+    </div>
+  </div>
+
+  <form id="frmEditDV" action="/devoluciones-ventas/<%= cab.id %>" method="post">
+    <div class="mb-3">
+      <label class="form-label">Motivo general (opcional)</label>
+      <input type="text" name="motivo_general" class="form-control" maxlength="255" value="<%- cab.motivo_general || '' %>">
+    </div>
+
+    <div class="alert alert-info small">
+      * El <strong>máximo devolvible</strong> mostrado ya descuenta otras devoluciones del mismo pedido (excluyendo esta).  
+      Si dejas una línea en 0, se eliminará de esta devolución al guardar.
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Producto</th>
+            <th class="text-end">Vendido</th>
+            <th class="text-end">Máx. devolvible</th>
+            <th style="width:160px;">Cantidad a devolver</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyItems">
+          <% 
+            // Mis cantidades actuales por product_id:
+            const mapActual = new Map();
+            (misDet || []).forEach(d => mapActual.set(d.product_id, Number(d.cantidad||0)));
+          %>
+
+          <% if (detalles && detalles.length) { %>
+            <% detalles.forEach((it, idx) => { 
+                 const actual = mapActual.get(it.product_id) || 0;
+            %>
+              <tr class="dv-item">
+                <td>
+                  <div class="fw-semibold"><%= it.product_nombre %></div>
+                  <input type="hidden" name="items[<%= idx %>][product_id]" value="<%= it.product_id %>">
+                </td>
+                <td class="text-end"><%= Number(it.cantidad).toFixed(2) %></td>
+                <td class="text-end"><span class="text-muted"><%= Number(it.maxDevolvible).toFixed(2) %></span></td>
+                <td>
+                  <input
+                    type="number"
+                    class="form-control form-control-sm qty"
+                    name="items[<%= idx %>][cantidad]"
+                    min="0"
+                    step="1"
+                    max="<%= Number(it.maxDevolvible) %>"
+                    value="<%= Math.min(actual, Number(it.maxDevolvible)) %>"
+                  >
+                </td>
+                <td>
+                  <input type="text"
+                         class="form-control form-control-sm"
+                         name="items[<%= idx %>][detalle]"
+                         maxlength="500"
+                         value="<%- (misDet.find(m => m.product_id === it.product_id)?.detalle) || '' %>"
+                         placeholder="Motivo específico de este producto">
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="5" class="text-center text-muted py-3">No hay líneas editables.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <a class="btn btn-outline-secondary" href="/devoluciones-ventas/<%= cab.id %>">Cancelar</a>
+      <button class="btn btn-primary">
+        <i class="fa fa-save"></i> Guardar cambios
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('frmEditDV');
+  form.addEventListener('submit', function(ev) {
+    const rows = form.querySelectorAll('tr.dv-item');
+    let alMenosUno = false;
+    for (const row of rows) {
+      const qty = row.querySelector('input.qty');
+      const max = Number(qty.getAttribute('max') || 0);
+      const val = Number(qty.value || 0);
+      if (val > max) {
+        ev.preventDefault();
+        alert('Una cantidad supera el máximo devolvible.');
+        qty.focus();
+        return;
+      }
+      if (val > 0) alMenosUno = true;
+      if (val <= 0) {
+        row.querySelectorAll('input').forEach(i => i.disabled = true);
+      }
+    }
+    if (!alMenosUno) {
+      ev.preventDefault();
+      alert('Debes dejar al menos una línea con cantidad > 0.');
+    }
+  });
+})();
+</script>
+
+<%- include('../partials/footer') %>

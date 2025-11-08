@@ -9,9 +9,14 @@
   background-color: #121212;
 }
 
-  .user-foto {
-    width: 20px;
-    height: 20px;
-    object-fit: cover;
-    object-position: center;
-  }
+/* Asegura que los contenedores “neutros” se vean bien en ambos temas */
+.bg-body { background-color: var(--bs-body-bg) !important; color: var(--bs-body-color) !important; }
+.text-body { color: var(--bs-body-color) !important; }
+
+/* Utilidad existente */
+.user-foto {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  object-position: center;
+}
